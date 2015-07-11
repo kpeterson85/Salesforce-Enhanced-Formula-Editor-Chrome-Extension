@@ -1,0 +1,15 @@
+{
+   "browser_action": {
+      "default_icon": "icon.png"
+   },
+   "content_scripts": [ {
+      "js": [ "contentscript.js" ],
+      "matches": [ "https://*.salesforce.com/*" ]
+   } ],
+   "description": "Enhances the formula editor textareas to have syntax highlighting, tabbing, parenthesis matching, and find and replace.",
+   "key": "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDdAqjNtFBntF1uyR+XTORlfzBOY0YpsmlEfHOKKn06zLCTUCNQ/5b6CkDfrkEZwroZSIKphNVPz21NrBAVLPFdCDibzAZdEMhzAdqfjJ7zUqkUemVZvntmXY+1mFIlXwT+y0LDTfh77puOkuZdVoRavU/KdFvGy4mb3da5mQeeiQIDAQAB",
+   "name": "Salesforce.com Enhanced Formula Editor",
+   "permissions": [ "tabs" ],
+   "update_url": "http://clients2.google.com/service/update2/crx",
+   "version": "1.2.2"
+}
