@@ -47,6 +47,9 @@ function EALoaded()
 	//override standard insert function
 	insertTextAtSelectionInEditor = function(textAreaName, value)
 	{
+		//remove leading and trailing space around value to insert
+		value = value.trim();
+		
 		//if the enhanced editor is loaded then insert using its functions
 		if (document.getElementById("edit_area_toggle_checkbox_" + sId).checked == true)
 		{
