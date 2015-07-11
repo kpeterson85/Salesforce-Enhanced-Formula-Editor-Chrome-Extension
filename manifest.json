@@ -1,15 +1,32 @@
 {
-   "browser_action": {
+   "manifest_version": 2,
+	 "browser_action": {
       "default_icon": "icon.png"
    },
    "content_scripts": [ {
       "js": [ "contentscript.js" ],
       "matches": [ "https://*.salesforce.com/*" ]
    } ],
+	 "web_accessible_resources": [
+			"edit_area_loader.js",
+			"activate_editor.js",
+			"elements_functions.js",
+			"resize_area.js",
+			"reg_syntax.js",
+			"langs/en.js",
+			"reg_syntax/forceformula.js",
+			"edit_area.css",
+			"edit_area.js",
+			"manage_area.js",
+			"edit_area_functions.js",
+			"keyboard.js",
+			"search_replace.js",
+			"highlight.js",
+			"regexp.js",
+			"images/*"
+	 ],
    "description": "Enhances the formula editor textareas to have syntax highlighting, tabbing, parenthesis matching, and find and replace.",
-   "key": "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDdAqjNtFBntF1uyR+XTORlfzBOY0YpsmlEfHOKKn06zLCTUCNQ/5b6CkDfrkEZwroZSIKphNVPz21NrBAVLPFdCDibzAZdEMhzAdqfjJ7zUqkUemVZvntmXY+1mFIlXwT+y0LDTfh77puOkuZdVoRavU/KdFvGy4mb3da5mQeeiQIDAQAB",
    "name": "Salesforce.com Enhanced Formula Editor",
    "permissions": [ "tabs" ],
-   "update_url": "http://clients2.google.com/service/update2/crx",
-   "version": "1.2.2"
+   "version": "1.3"
 }
