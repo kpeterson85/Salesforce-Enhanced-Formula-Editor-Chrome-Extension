@@ -40,4 +40,25 @@ function EALoaded()
 {
 	editAreaLoader.execCommand(sId, 'set_word_wrap', true);
 	editAreaLoader.execCommand(sId, 'set_word_wrap', false);
+	
+	//backup the standard salesforce insert function
+	var insertTextAtSelectionInEditor_backup = insertTextAtSelectionInEditor;
+	
+	//override standard insert function
+	insertTextAtSelectionInEditor = function(textAreaName, value)
+	{
+		//remove leading and trailing space around value to insert
+		value = value.trim();
+		
+		//if the enhanced editor is loaded then insert using its functions
+		if (document.getElementById("edit_area_toggle_checkbox_" + sId).checked == true)
+		{
+			editAreaLoader.insertTags(sId, value, "");
+		}
+		else
+		{
+			//if the enhanced editor is not loaded then insert using salesforce's normal function
+			insertTextAtSelectionInEditor_backup(textAreaName, value);
+		}
+	}
 }
