@@ -110,16 +110,16 @@ function LoadFormulaFieldDetails(e)
 	
 	$table.empty();
 	
-	$table.append("<tr class='headerRow'><th>Field</th><th>Label</th><th>Type</th><th>Formula</th><th>Value</th></tr>");
+	$table.append("<tr class='headerRow'><th>Field</th><th>Label</th><th>Type</th><th>Formula</th><th>Edit</th><th>Value</th></tr>");
 
 	//LOOP OVER EACH FIELD PATH AND IDENTIFY WHAT FINAL FIELD IT REPRESENTS
 	for (var i = 0; i < oFields.length; i++)
 	{
 		var oFieldParts = oFields[i].split(".");
 				
-		$table.append("<tr id='field" + i + "' data-fieldIndex='" + i + "' class='fieldRow'><td class='fieldPath'>" + oFields[i] + "</td><td class='fieldLabel'></td><td class='fieldType'></td><td class='fieldFormula'></td><td class='fieldValue'></td></tr>");
+		$table.append("<tr id='field" + i + "' data-fieldIndex='" + i + "' class='fieldRow'><td class='fieldPath'>" + oFields[i] + "</td><td class='fieldLabel'></td><td class='fieldType'></td><td class='fieldFormula'></td><td class='fieldEdit'></td><td class='fieldValue'></td></tr>");
 		
-		FindFieldDescribeRecursive(i, oFieldParts, 0, oCurrentObjectFields);
+		FindFieldDescribeRecursive(window.sCurrentObjectAPIName, i, oFieldParts, 0, oCurrentObjectFields);
 	}	
 	
 	editorJQuery("#formulaEditorFields").show();
@@ -127,7 +127,7 @@ function LoadFormulaFieldDetails(e)
 }
 
 //LOOP OVER EACH FIELD PART AND WORK OUR WAY UP THE RELATIONSHIP CHAIN
-function FindFieldDescribeRecursive(iFieldIndex, oFieldParts, iFieldPartIndex, oCurrentFieldPartFields)
+function FindFieldDescribeRecursive(sObjectName, iFieldIndex, oFieldParts, iFieldPartIndex, oCurrentFieldPartFields)
 {
 	var oFieldDescribe = null;
 	//FIND THE FIELD UNDER THE OBJECT
@@ -144,18 +144,19 @@ function FindFieldDescribeRecursive(iFieldIndex, oFieldParts, iFieldPartIndex, o
 				jsforceConnection.sobject(oFieldDescribe.referenceTo[0]).describe$(function(err, meta) {
 					if (err) { return console.error(err); }
 					iFieldPartIndex += 1;
-					return FindFieldDescribeRecursive(iFieldIndex, oFieldParts, iFieldPartIndex, meta.fields);
+					console.log(meta);
+					return FindFieldDescribeRecursive(oFieldDescribe.referenceTo[0], iFieldIndex, oFieldParts, iFieldPartIndex, meta.fields);
 				});
 			}
 			else
 			{
-				UpdateFieldDetails(iFieldIndex, oFieldParts, oFieldDescribe);
+				UpdateFieldDetails(sObjectName, iFieldIndex, oFieldParts, oFieldDescribe);
 			}
 		}
 	}
 }
 
-function UpdateFieldDetails(iFieldIndex, oFieldParts, oFieldDescribe)
+function UpdateFieldDetails(sObjectName, iFieldIndex, oFieldParts, oFieldDescribe)
 {
 	console.log(oFieldDescribe);
 	$fieldTR = editorJQuery("#formulaEditorFieldsTable tr#field" + iFieldIndex);
@@ -167,6 +168,36 @@ function UpdateFieldDetails(iFieldIndex, oFieldParts, oFieldDescribe)
 		var $formulaViewLink = editorJQuery("<a href='#'>View</a>");
 		$fieldTR.find("td.fieldFormula").append($formulaViewLink);
 	}
+	
+	//CREATE CLOSURE SO WE CAN UPDATE THE APPROPRIATE FIELD ROW WHEN WE ARE DONE GETTING THE FIELD ID
+	(function($fieldTR) {
+		if (sObjectName.indexOf("__c") > -1)
+		{
+			jsforceConnection.tooling.sobject('CustomObject')
+			.find({ DeveloperName: sObjectName.replace("__c", "") })
+			.execute(function(err, records) {
+				if (err) { return console.error(err); }
+				console.log("fetched : " + records);
+				jsforceConnection.tooling.sobject('CustomField')
+				.find({ TableEnumOrId: records[0].Id, DeveloperName: oFieldDescribe.name.replace("__c", "") })
+				.execute(function(err, records) {
+					if (err) { return console.error(err); }
+					console.log("fetched : " + records);
+					$fieldTR.find("td.fieldEdit").append("<a href='/" + records[0].Id + "/e' target='_blank'>Edit</a>");
+				});
+			});
+		}
+		else
+		{
+			jsforceConnection.tooling.sobject('CustomField')
+			.find({ TableEnumOrId: sObjectName, DeveloperName: oFieldDescribe.name.replace("__c", "") })
+			.execute(function(err, records) {
+				if (err) { return console.error(err); }
+				console.log("fetched : " + records);
+				$fieldTR.find("td.fieldEdit").append("<a href='/" + records[0].Id + "/e' target='_blank'>Edit</a>");
+			});
+		}
+	})($fieldTR);
 	
 }
 
