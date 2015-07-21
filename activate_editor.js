@@ -14,77 +14,141 @@ else if (document.getElementById("ValidationFormula") != null)
 	sId = "ValidationFormula";
 }
 
-var textarea = document.getElementById(sId);
-//textarea.style.wordWrap = "normal !important";
-//textarea.style.whiteSpace = "nowrap !important"
+var oFormulaEditorSettings = {
+	TextAreaId: sId,
+	TextAreaEditorHeight: 400,
+	TextAreaEditorDisplay: "onload",
+	ObjectId: editorJQuery("#entity").val(),
+	ObjectAPIName: "",
+	OverrideInsertButtons: true,
+	LoadFieldDetailsAfterSelector: ".formulaFooter"
+}
+	
+//CONNECT TO SALESFORCE
+window.jsforceConnection = new jsforce.Connection({
+	serverUrl : "https://" + document.location.host,
+	sessionId : readCookie("sid")
+});	
 
-editAreaLoader.init({
-	id: sId	// id of the textarea to transform		
-	,start_highlight: true	// if start with highlight
-	,allow_resize: "both"
-	,allow_toggle: true
-	,word_wrap: false
-	,language: "en"
-	,syntax: "forceformula"
-	,replace_tab_by_spaces: 2
-	,font_size: "8"
-	,font_family: "verdana, monospace"
-	,min_height: 400
-	,min_width: 600
-	,show_line_colors: true
-	,EA_load_callback: "EALoaded"
-});
+ActivateEditor(oFormulaEditorSettings);
 
-//execute this manually because chrome doesn't recognize off on intial load?
-//the textarea[wrap=off] useragent styles don't apply initially for some reason
-function EALoaded()
+function ActivateEditor(oFormulaEditorSettings)
 {
-	editAreaLoader.execCommand(sId, 'set_word_wrap', true);
-	editAreaLoader.execCommand(sId, 'set_word_wrap', false);
+	var oDefaultSettings = {
+		TextAreaId: "",
+		TextAreaEditorHeight: 400,
+		TextAreaEditorDisplay: "onload",
+		ObjectId: "",
+		ObjectAPIName: "",
+		ObjectFields: null,
+		FieldDetailsShellId: "",
+		OverrideInsertButtons: false,
+		LoadFieldDetailsAfterSelector: "",
+		FieldsShell: null,
+		FieldsTable: null,
+		FieldValuesPreviewInput: null
+	}
 	
-	//backup the standard salesforce insert function
-	var insertTextAtSelectionInEditor_backup = insertTextAtSelectionInEditor;
+	oFormulaEditorSettings = editorJQuery.extend(oDefaultSettings, oFormulaEditorSettings);
 	
-	//override standard insert function
-	insertTextAtSelectionInEditor = function(textAreaName, value)
+	editorJQuery("#" + oFormulaEditorSettings.TextAreaId).data("formulaEditorSettings", oFormulaEditorSettings);
+	
+	editAreaLoader.init({
+		id: oFormulaEditorSettings.TextAreaId	// id of the textarea to transform		
+		,start_highlight: true	// if start with highlight
+		,allow_resize: "both"
+		,allow_toggle: true
+		,word_wrap: false
+		,language: "en"
+		,syntax: "forceformula"
+		,replace_tab_by_spaces: 2
+		,font_size: "8"
+		,font_family: "verdana, monospace"
+		,min_height: oFormulaEditorSettings.TextAreaEditorHeight
+		,min_width: 600
+		,show_line_colors: true
+		,EA_load_callback: "FormulaEditAreaLoaded"
+		,display: oFormulaEditorSettings.TextAreaEditorDisplay
+	});
+}
+
+
+function FormulaEditAreaLoaded(sTextAreaId)
+{
+	oFormulaEditorSettings = editorJQuery("#" + sTextAreaId).data("formulaEditorSettings");
+	
+	//execute this manually because chrome doesn't recognize off on intial load?
+	//the textarea[wrap=off] useragent styles don't apply initially for some reason
+	editAreaLoader.execCommand(oFormulaEditorSettings.TextAreaId, 'set_word_wrap', true);
+	editAreaLoader.execCommand(oFormulaEditorSettings.TextAreaId, 'set_word_wrap', false);
+	
+	if (oFormulaEditorSettings.OverrideInsertButtons == true)
 	{
-		//remove leading and trailing space around value to insert
-		value = value.trim();
+		//backup the standard salesforce insert function
+		var insertTextAtSelectionInEditor_backup = insertTextAtSelectionInEditor;
 		
-		//if the enhanced editor is loaded then insert using its functions
-		if (document.getElementById("edit_area_toggle_checkbox_" + sId).checked == true)
+		//override standard insert function
+		insertTextAtSelectionInEditor = function(textAreaName, value)
 		{
-			editAreaLoader.insertTags(sId, value, "");
-		}
-		else
-		{
-			//if the enhanced editor is not loaded then insert using salesforce's normal function
-			insertTextAtSelectionInEditor_backup(textAreaName, value);
+			//remove leading and trailing space around value to insert
+			value = value.trim();
+			
+			//if the enhanced editor is loaded then insert using its functions
+			if (document.getElementById("edit_area_toggle_checkbox_" + sTextAreaId).checked == true)
+			{
+				editAreaLoader.insertTags(sTextAreaId, value, "");
+			}
+			else
+			{
+				//if the enhanced editor is not loaded then insert using salesforce's normal function
+				insertTextAtSelectionInEditor_backup(textAreaName, value);
+			}
 		}
 	}
 	
 	//SETUP FIELD DETAILS
-	editorJQuery(".formulaFooter").after("<input id='formulaEditorFieldsLoad' type='submit' class='btn' value='Load Field Details' /><div id='formulaEditorFields' style='display: none;'><div id='fieldValuesPreviewShell' style='display: inline; text-align: right; float: right;'><input type='text' id='fieldValuesPreviewId' placeholder='Enter Record Id' /> <input id='fieldValuesPreviewButton' type='button' class='btn' value='Preview Values' /></div><table id='formulaEditorFieldsTable' class='list'></table></div>");
+	var $fieldDetails = editorJQuery("<input type='submit' class='btn formulaEditorFieldsLoad' value='Load Field Details' /><div class='formulaEditorFields' style='display: none;'><div class='fieldValuesPreviewShell' style='display: inline; text-align: right; float: right;'><input type='text' class='fieldValuesPreviewId' placeholder='Enter Record Id' /> <input type='button' class='fieldValuesPreviewButton btn' value='Preview Values' /></div><table class='formulaEditorFieldsTable list'></table></div>");
 	
-	editorJQuery("#formulaEditorFieldsLoad").click(LoadFormulaFieldDetails);
+	$loadButton = $fieldDetails.filter("input.formulaEditorFieldsLoad");
+	$loadButton.data("formulaEditorSettings", oFormulaEditorSettings);
 	
-	editorJQuery("#fieldValuesPreviewButton").click(LoadFieldValuesPreview);
+	$fieldsShell = $fieldDetails.filter("div.formulaEditorFields");
+	oFormulaEditorSettings.FieldsShell = $fieldsShell;
 	
-	editorJQuery.get("/" + editorJQuery("#entity").val(), function( data ) {
-		window.sCurrentObjectAPIName = editorJQuery(data).find("table.detailList td:contains('API Name')").next().text();
-		//LOAD CURRENT OBJECT FIELDS
-		window.oCurrentObjectFields = null;
-		jsforceConnection.sobject(window.sCurrentObjectAPIName).describe$(function(err, meta) {
-			if (err) { return console.error(err); }
-			window.oCurrentObjectFields = meta.fields;
+	$previewButton = $fieldDetails.find("input.fieldValuesPreviewButton");
+	$previewButton.data("formulaEditorSettings", oFormulaEditorSettings);
+	
+	$previewInput = $fieldDetails.find("input.fieldValuesPreviewId");
+	oFormulaEditorSettings.FieldValuesPreviewInput = $previewInput;
+	
+	$fieldsTable = $fieldDetails.find("table.formulaEditorFieldsTable");
+	oFormulaEditorSettings.FieldsTable = $fieldsTable;
+	
+	editorJQuery(oFormulaEditorSettings.LoadFieldDetailsAfterSelector).after($fieldDetails);
+	
+	$loadButton.click(LoadFormulaFieldDetails);
+	
+	$previewButton.click(LoadFieldValuesPreview);
+	
+	if (oFormulaEditorSettings.ObjectAPIName == "")
+	{
+		editorJQuery.get("/" + oFormulaEditorSettings.ObjectId, function( data ) {
+			oFormulaEditorSettings.ObjectAPIName = editorJQuery(data).find("table.detailList td:contains('API Name')").next().text();
+			//LOAD CURRENT OBJECT FIELDS
+			jsforceConnection.sobject(oFormulaEditorSettings.ObjectAPIName).describe$(function(err, meta) {
+				if (err) { return console.error(err); }
+				oFormulaEditorSettings.ObjectFields = meta.fields;
+			});
 		});
-	});
-	
-	//CONNECT TO SALESFORCE
-	window.jsforceConnection = new jsforce.Connection({
-		serverUrl : "https://" + document.location.host,
-		sessionId : readCookie("sid")
-	});	
+	}
+	else
+	{
+		//LOAD CURRENT OBJECT FIELDS
+		jsforceConnection.sobject(oFormulaEditorSettings.ObjectAPIName).describe$(function(err, meta) {
+			if (err) { return console.error(err); }
+			oFormulaEditorSettings.ObjectFields = meta.fields;
+		});
+	}
 }
 
 function readCookie(name) {
@@ -99,35 +163,39 @@ function readCookie(name) {
 }
 
 function LoadFormulaFieldDetails(e)
-{
-	e.preventDefault();
+{	
+	var oFormulaEditorSettings = editorJQuery(this).data("formulaEditorSettings");
 	
-	var sFormula = editorJQuery("#" + sId).val();
+	var sFormula = editorJQuery("#"+oFormulaEditorSettings.TextAreaId).val();
 	var oFields = GetFieldsFromFormula(sFormula);
 	
 	//LOAD THE TABLE	
-	var $table = editorJQuery("#formulaEditorFieldsTable");
+	var $table = oFormulaEditorSettings.FieldsTable;
 	
 	$table.empty();
 	
-	$table.append("<tr class='headerRow'><th>Field</th><th>Label</th><th>Type</th><th>Formula</th><th>Edit</th><th>Value</th></tr>");
+	$table.append("<tr class='headerRow'><th>Field</th><th>Type</th><th>Details</th><th>Edit</th><th>Value</th></tr>");
 
 	//LOOP OVER EACH FIELD PATH AND IDENTIFY WHAT FINAL FIELD IT REPRESENTS
 	for (var i = 0; i < oFields.length; i++)
 	{
 		var oFieldParts = oFields[i].split(".");
 				
-		$table.append("<tr id='field" + i + "' data-fieldIndex='" + i + "' class='fieldRow'><td class='fieldPath'>" + oFields[i] + "</td><td class='fieldLabel'></td><td class='fieldType'></td><td class='fieldFormula'></td><td class='fieldEdit'></td><td class='fieldValue'></td></tr>");
+		var $fieldTR = editorJQuery("<tr id='field" + i + "' data-fieldIndex='" + i + "' class='fieldRow'><td class='fieldPath'>" + oFields[i] + "</td><td class='fieldType'></td><td class='fieldDetails'></td><td class='fieldEdit'></td><td class='fieldValue'></td></tr>");
+		$table.append($fieldTR);
 		
-		FindFieldDescribeRecursive(window.sCurrentObjectAPIName, i, oFieldParts, 0, oCurrentObjectFields);
+		FindFieldDescribeRecursive($fieldTR, oFormulaEditorSettings.ObjectAPIName, i, oFieldParts, 0, oFormulaEditorSettings.ObjectFields);
 	}	
 	
-	editorJQuery("#formulaEditorFields").show();
+	oFormulaEditorSettings.FieldsShell.show();
+	
+	e.preventDefault();
+	e.stopImmediatePropagation();
 
 }
 
 //LOOP OVER EACH FIELD PART AND WORK OUR WAY UP THE RELATIONSHIP CHAIN
-function FindFieldDescribeRecursive(sObjectName, iFieldIndex, oFieldParts, iFieldPartIndex, oCurrentFieldPartFields)
+function FindFieldDescribeRecursive($fieldTR, sObjectName, iFieldIndex, oFieldParts, iFieldPartIndex, oCurrentFieldPartFields)
 {
 	var oFieldDescribe = null;
 	//FIND THE FIELD UNDER THE OBJECT
@@ -145,59 +213,111 @@ function FindFieldDescribeRecursive(sObjectName, iFieldIndex, oFieldParts, iFiel
 					if (err) { return console.error(err); }
 					iFieldPartIndex += 1;
 					console.log(meta);
-					return FindFieldDescribeRecursive(oFieldDescribe.referenceTo[0], iFieldIndex, oFieldParts, iFieldPartIndex, meta.fields);
+					return FindFieldDescribeRecursive($fieldTR, oFieldDescribe.referenceTo[0], iFieldIndex, oFieldParts, iFieldPartIndex, meta.fields);
 				});
 			}
 			else
 			{
-				UpdateFieldDetails(sObjectName, iFieldIndex, oFieldParts, oFieldDescribe);
+				UpdateFieldDetails($fieldTR, sObjectName, iFieldIndex, oFieldParts, oFieldDescribe);
 			}
 		}
 	}
 }
 
-function UpdateFieldDetails(sObjectName, iFieldIndex, oFieldParts, oFieldDescribe)
+function UpdateFieldDetails($fieldTR, sObjectName, iFieldIndex, oFieldParts, oFieldDescribe)
 {
 	console.log(oFieldDescribe);
-	$fieldTR = editorJQuery("#formulaEditorFieldsTable tr#field" + iFieldIndex);
-	$fieldTR.data("describe", oFieldDescribe);
-	$fieldTR.find("td.fieldLabel").text(oFieldDescribe.label);
+	$fieldTR.data("fieldDescribe", oFieldDescribe);
+	$fieldTR.data("objectName", sObjectName);
 	$fieldTR.find("td.fieldType").text(oFieldDescribe.type);
 	if (oFieldDescribe.calculatedFormula != null)
 	{
-		var $formulaViewLink = editorJQuery("<a href='#'>View</a>");
-		$fieldTR.find("td.fieldFormula").append($formulaViewLink);
+		$fieldTR.find("td.fieldType").append(" (F)");
 	}
 	
-	//CREATE CLOSURE SO WE CAN UPDATE THE APPROPRIATE FIELD ROW WHEN WE ARE DONE GETTING THE FIELD ID
-	(function($fieldTR) {
-		if (sObjectName.indexOf("__c") > -1)
+	var $detailsViewLink = editorJQuery("<a href='#'>View</a>");
+	$fieldTR.find("td.fieldDetails").append($detailsViewLink);
+	$detailsViewLink.click(function()
+	{
+		if ($detailsViewLink.text() == "View")
 		{
-			jsforceConnection.tooling.sobject('CustomObject')
-			.find({ DeveloperName: sObjectName.replace("__c", "") })
-			.execute(function(err, records) {
-				if (err) { return console.error(err); }
-				console.log("fetched : " + records);
-				jsforceConnection.tooling.sobject('CustomField')
-				.find({ TableEnumOrId: records[0].Id, DeveloperName: oFieldDescribe.name.replace("__c", "") })
-				.execute(function(err, records) {
-					if (err) { return console.error(err); }
-					console.log("fetched : " + records);
-					$fieldTR.find("td.fieldEdit").append("<a href='/" + records[0].Id + "/e' target='_blank'>Edit</a>");
-				});
-			});
+			editorJQuery(this).closest("tr").next().show();
+			$detailsViewLink.text("Hide");
+			//attempt to turn on a formula editor if it exists
+			editorJQuery(this).closest("tr").next().find("label:contains('Toggle editor')").prev().filter(":not(:checked)").click();
 		}
 		else
 		{
+			editorJQuery(this).closest("tr").next().hide();
+			$detailsViewLink.text("View");
+		}
+		return false;
+	});
+	
+	var $fieldDetailsTR = editorJQuery("<tr class='fieldDetailsRow' style='display: none;'><td style='padding-left: 30px;' colspan='" + $fieldTR.children().length + "'></td></tr>");
+	$fieldTR.after($fieldDetailsTR);
+	
+	var $fieldDetailsTC = $fieldDetailsTR.children(0);
+	var $detailsTable = editorJQuery("<table class='list'><tr class='headerRow'><th>Detail</th><th>Value</th></tr></table>");
+	$fieldDetailsTC.append($detailsTable);
+	
+	$detailsTable.append("<tr><td>Label</td><td>" + oFieldDescribe.label + "</td></tr>");
+	
+	if (oFieldDescribe.calculatedFormula != null)
+	{
+		var sTextAreaId = sObjectName+"-"+oFieldDescribe.name;
+		$detailsTable.append("<tr><td>Formula</td><td><textarea id='" + sTextAreaId + "' cols='80' rows='10' style='width: 99%; height: 15em;' wrap='soft'></textarea><div id='"+sTextAreaId+"Footer'></div></td></tr>");
+		editorJQuery("#" + sTextAreaId).val(oFieldDescribe.calculatedFormula);
+		
+		var oSubFormulaEditorSettings = {
+			TextAreaId: sTextAreaId,
+			TextAreaEditorHeight: 200,
+			TextAreaEditorDisplay: "later",
+			ObjectId: "",
+			ObjectAPIName: sObjectName,
+			OverrideInsertButtons: false,
+			LoadFieldDetailsAfterSelector: "#" + sTextAreaId+"Footer"
+		}
+		
+		ActivateEditor(oSubFormulaEditorSettings);	
+	}
+	else if (oFieldDescribe.picklistValues.length > 0)
+	{
+		$detailsTable.append("<tr><td>Picklist Values</td><td><table class='list picklistValues'><tr class='headerRow'><th>Value</th><th>Default</th></tr></table></td></tr>");
+		var $picklistTable = $detailsTable.find("table.picklistValues");
+		
+		for (var v = 0; v < oFieldDescribe.picklistValues.length; v++)
+		{
+			$picklistTable.append("<tr><td>" + oFieldDescribe.picklistValues[v].label + "</td><td>" + oFieldDescribe.picklistValues[v].defaultValue + "</td></tr>");
+		}
+	}
+
+	if (sObjectName.indexOf("__c") > -1)
+	{
+		jsforceConnection.tooling.sobject('CustomObject')
+		.find({ DeveloperName: sObjectName.replace("__c", "") })
+		.execute(function(err, records) {
+			if (err) { return console.error(err); }
+			console.log("fetched : " + records);
 			jsforceConnection.tooling.sobject('CustomField')
-			.find({ TableEnumOrId: sObjectName, DeveloperName: oFieldDescribe.name.replace("__c", "") })
+			.find({ TableEnumOrId: records[0].Id, DeveloperName: oFieldDescribe.name.replace("__c", "") })
 			.execute(function(err, records) {
 				if (err) { return console.error(err); }
-				console.log("fetched : " + records);
+				console.log("fetched : " + records[0]);
 				$fieldTR.find("td.fieldEdit").append("<a href='/" + records[0].Id + "/e' target='_blank'>Edit</a>");
 			});
-		}
-	})($fieldTR);
+		});
+	}
+	else
+	{
+		jsforceConnection.tooling.sobject('CustomField')
+		.find({ TableEnumOrId: sObjectName, DeveloperName: oFieldDescribe.name.replace("__c", "") })
+		.execute(function(err, records) {
+			if (err) { return console.error(err); }
+			console.log("fetched : " + records[0]);
+			$fieldTR.find("td.fieldEdit").append("<a href='/" + records[0].Id + "/e' target='_blank'>Edit</a>");
+		});
+	}
 	
 }
 
@@ -205,22 +325,22 @@ function LoadFieldValuesPreview(e)
 {
 	e.preventDefault();
 	
-	var sRecordId = editorJQuery("#fieldValuesPreviewId").val();
+	var sRecordId = oFormulaEditorSettings.FieldValuesPreviewInput.val();
 	
 	if (sRecordId.trim() == "")
 	{
-		alert("Please enter a 15 character or 18 character record id.");
+		alert("Please enter a record id.");
 		return false;
 	}
 	
 	//LOOP OVER FIELD DETAIL TABLE ROWS AND BUILD SOQL QUERY
 	var oFields = [];
-	editorJQuery("#formulaEditorFieldsTable").find("tr.fieldRow td.fieldPath").each(function()
+	oFormulaEditorSettings.FieldsTable.find(" > tr.fieldRow > td.fieldPath").each(function()
 	{
 		oFields.push(editorJQuery(this).text());
 	});	
 	
-	jsforceConnection.query("SELECT Id, Name, " + oFields.join(",") + " FROM " + window.sCurrentObjectAPIName + " WHERE Id = '" + sRecordId + "'", function(err, result) {
+	jsforceConnection.query("SELECT Id, Name, " + oFields.join(",") + " FROM " + oFormulaEditorSettings.ObjectAPIName + " WHERE Id = '" + sRecordId + "'", function(err, result) {
 		if (err) { return console.error(err); }
 		var oRecord = result.records[0];
 		console.log(oRecord);
@@ -234,7 +354,7 @@ function LoadFieldValuesPreview(e)
 			{
 				oCurrentRecordPart = oCurrentRecordPart[oFieldParts[p]];
 			}
-			editorJQuery("tr#field" + f).find("td.fieldValue").text(oCurrentRecordPart);
+			editorJQuery("tr#field" + f, oFormulaEditorSettings.FieldsTable).find("td.fieldValue").text(oCurrentRecordPart);
 		}
 	});
 

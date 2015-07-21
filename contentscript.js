@@ -47,13 +47,17 @@ function init() {
 				jsforceScript.type = "text/javascript";
 				jsforceScript.src = chrome.extension.getURL("jsforce-core.min.js");
 				jsforceScript.charset = "UTF-8";
+				jsforceScript.onload = jsforceScriptLoaded;
 				document.getElementsByTagName("head")[0].appendChild(jsforceScript);
 				
-				var activate = document.createElement("script");
-				activate.type = "text/javascript";
-				activate.src = chrome.extension.getURL("activate_editor.js");
-				activate.charset = "UTF-8";
-				document.getElementsByTagName("head")[0].appendChild(activate);
+				function jsforceScriptLoaded()
+				{
+					var activate = document.createElement("script");
+					activate.type = "text/javascript";
+					activate.src = chrome.extension.getURL("activate_editor.js");
+					activate.charset = "UTF-8";
+					document.getElementsByTagName("head")[0].appendChild(activate);
+				}
 			}
 		}
 	}
