@@ -17,11 +17,19 @@ else if (document.getElementById("ValidationFormula") != null)
 var oFormulaEditorSettings = {
 	TextAreaId: sId,
 	TextAreaEditorHeight: 400,
-	TextAreaEditorDisplay: "onload",
-	ObjectId: editorJQuery("#entity").val(),
-	ObjectAPIName: "",
+	TextAreaEditorDisplay: "onload",	
 	OverrideInsertButtons: true,
 	LoadFieldDetailsAfterSelector: ".formulaFooter"
+}
+
+//custom objects have their object id in the entity field, standard objects have their object name
+if (editorJQuery("#entity").val().charAt(0) == "0")
+{
+	oFormulaEditorSettings.ObjectId = editorJQuery("#entity").val();
+}
+else
+{
+	oFormulaEditorSettings.ObjectAPIName = editorJQuery("#entity").val();
 }
 	
 //CONNECT TO SALESFORCE
@@ -107,7 +115,7 @@ function FormulaEditAreaLoaded(sTextAreaId)
 	}
 	
 	//SETUP FIELD DETAILS
-	var $fieldDetails = editorJQuery("<input type='submit' class='btn formulaEditorFieldsLoad' value='Load Field Details' /><div class='formulaEditorFields' style='display: none;'><div class='fieldValuesPreviewShell' style='display: inline; text-align: right; float: right;'><input type='text' class='fieldValuesPreviewId' placeholder='Enter Record Id' /> <input type='button' class='fieldValuesPreviewButton btn' value='Preview Values' /></div><table class='formulaEditorFieldsTable list'></table></div>");
+	var $fieldDetails = editorJQuery("<input type='submit' class='btn formulaEditorFieldsLoad' style='float: left;' value='Load Field Details' /><div class='formulaEditorFields' style='display: none;'><div class='fieldValuesPreviewShell' style='display: inline; text-align: right; float: right;'><input type='text' class='fieldValuesPreviewId' placeholder='Enter Record Id' /> <input type='button' class='fieldValuesPreviewButton btn' value='Preview Values' /></div><table class='formulaEditorFieldsTable list'></table></div>");
 	
 	$loadButton = $fieldDetails.filter("input.formulaEditorFieldsLoad");
 	$loadButton.data("formulaEditorSettings", oFormulaEditorSettings);
@@ -174,18 +182,42 @@ function LoadFormulaFieldDetails(e)
 	
 	$table.empty();
 	
-	$table.append("<tr class='headerRow'><th>Field</th><th>Type</th><th>Details</th><th>Edit</th><th>Value</th></tr>");
+	$table.append("<tr class='headerRow'><th>Field</th><th>Type</th><th>Details</th><th><a class='formulaFieldCompile' href='#' style='text-decoration: underline;'>(F) Compile</a></th><th>Edit</th><th>Value</th></tr>");
 
 	//LOOP OVER EACH FIELD PATH AND IDENTIFY WHAT FINAL FIELD IT REPRESENTS
 	for (var i = 0; i < oFields.length; i++)
 	{
 		var oFieldParts = oFields[i].split(".");
 				
-		var $fieldTR = editorJQuery("<tr id='field" + i + "' data-fieldIndex='" + i + "' class='fieldRow'><td class='fieldPath'>" + oFields[i] + "</td><td class='fieldType'></td><td class='fieldDetails'></td><td class='fieldEdit'></td><td class='fieldValue'></td></tr>");
+		var $fieldTR = editorJQuery("<tr id='field" + i + "' data-fieldIndex='" + i + "' class='fieldRow'><td class='fieldPath'>" + oFields[i] + "</td><td class='fieldType'></td><td class='fieldDetails'></td><td class='fieldCompile'></td><td class='fieldEdit'></td><td class='fieldValue'></td></tr>");
 		$table.append($fieldTR);
 		
 		FindFieldDescribeRecursive($fieldTR, oFormulaEditorSettings.ObjectAPIName, i, oFieldParts, 0, oFormulaEditorSettings.ObjectFields);
-	}	
+	}
+	
+	$table.find("tr.headerRow a.formulaFieldCompile").click(function()
+	{
+		$table.find("> tbody > tr.fieldRow > td.fieldEdit").each(function()
+		{
+			var $trCompileField = editorJQuery(this).parent().find("> td.fieldCompile");
+			$trCompileField.text("Loading");
+			var sEditURL = editorJQuery(this).find("a").attr("href");
+			editorJQuery.get(sEditURL, function(data)
+			{
+				var $form = editorJQuery(data).find("#editPage");
+				$form.find("input[type='submit'][name!='validateDefaultFormula']").remove();
+				editorJQuery.post(sEditURL, $form.serialize(), function(data)
+				{
+					var sCompileSize = editorJQuery(data).find("#validationStatus").text();
+					sCompileSize = sCompileSize.replace("No syntax errors in merge fields or functions. (Compiled size: ", "");
+					sCompileSize = sCompileSize.replace(" characters)", "");
+					$trCompileField.text(sCompileSize.trim());
+				});
+			});
+		});
+		
+		return false;
+	});
 	
 	oFormulaEditorSettings.FieldsShell.show();
 	
@@ -325,6 +357,8 @@ function LoadFieldValuesPreview(e)
 {
 	e.preventDefault();
 	
+	var oFormulaEditorSettings = editorJQuery(this).data("formulaEditorSettings");
+	
 	var sRecordId = oFormulaEditorSettings.FieldValuesPreviewInput.val();
 	
 	if (sRecordId.trim() == "")
@@ -335,7 +369,7 @@ function LoadFieldValuesPreview(e)
 	
 	//LOOP OVER FIELD DETAIL TABLE ROWS AND BUILD SOQL QUERY
 	var oFields = [];
-	oFormulaEditorSettings.FieldsTable.find(" > tr.fieldRow > td.fieldPath").each(function()
+	oFormulaEditorSettings.FieldsTable.find("> tbody > tr.fieldRow > td.fieldPath").each(function()
 	{
 		oFields.push(editorJQuery(this).text());
 	});	
@@ -354,7 +388,7 @@ function LoadFieldValuesPreview(e)
 			{
 				oCurrentRecordPart = oCurrentRecordPart[oFieldParts[p]];
 			}
-			editorJQuery("tr#field" + f, oFormulaEditorSettings.FieldsTable).find("td.fieldValue").text(oCurrentRecordPart);
+			oFormulaEditorSettings.FieldsTable.find("> tbody > tr#field" + f).find("td.fieldValue").text(oCurrentRecordPart);
 		}
 	});
 
