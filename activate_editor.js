@@ -199,21 +199,26 @@ function LoadFormulaFieldDetails(e)
 	{
 		$table.find("> tbody > tr.fieldRow > td.fieldEdit").each(function()
 		{
-			var $trCompileField = editorJQuery(this).parent().find("> td.fieldCompile");
-			$trCompileField.text("Loading");
-			var sEditURL = editorJQuery(this).find("a").attr("href");
-			editorJQuery.get(sEditURL, function(data)
+			var $trField = editorJQuery(this).parent();
+			var oFieldDescribe = $trField.data("fieldDescribe");
+			if (oFieldDescribe.calculatedFormula != null)
 			{
-				var $form = editorJQuery(data).find("#editPage");
-				$form.find("input[type='submit'][name!='validateDefaultFormula']").remove();
-				editorJQuery.post(sEditURL, $form.serialize(), function(data)
+				var $tdCompileField = editorJQuery(this).parent().find("> td.fieldCompile");
+				$tdCompileField.text("Loading");
+				var sEditURL = editorJQuery(this).find("a").attr("href");
+				editorJQuery.get(sEditURL, function(data)
 				{
-					var sCompileSize = editorJQuery(data).find("#validationStatus").text();
-					sCompileSize = sCompileSize.replace("No syntax errors in merge fields or functions. (Compiled size: ", "");
-					sCompileSize = sCompileSize.replace(" characters)", "");
-					$trCompileField.text(sCompileSize.trim());
+					var $form = editorJQuery(data).find("#editPage");
+					$form.find("input[type='submit'][name!='validateDefaultFormula']").remove();
+					editorJQuery.post(sEditURL, $form.serialize(), function(data)
+					{
+						var sCompileSize = editorJQuery(data).find("#validationStatus").text();
+						sCompileSize = sCompileSize.replace("No syntax errors in merge fields or functions. (Compiled size: ", "");
+						sCompileSize = sCompileSize.replace(" characters)", "");
+						$tdCompileField.text(sCompileSize.trim());
+					});
 				});
-			});
+			}
 		});
 		
 		return false;
@@ -233,7 +238,10 @@ function FindFieldDescribeRecursive($fieldTR, sObjectName, iFieldIndex, oFieldPa
 	//FIND THE FIELD UNDER THE OBJECT
 	for (var f = 0; f < oCurrentFieldPartFields.length; f++)
 	{
-		if (oFieldParts[iFieldPartIndex].replace("__r", "__c") == oCurrentFieldPartFields[f].name)
+		if (
+			oFieldParts[iFieldPartIndex] == oCurrentFieldPartFields[f].name ||
+			oFieldParts[iFieldPartIndex] == oCurrentFieldPartFields[f].relationshipName
+		)
 		{
 			oFieldDescribe = oCurrentFieldPartFields[f];
 			
