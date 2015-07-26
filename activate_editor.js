@@ -18,6 +18,7 @@ var oFormulaEditorSettings = {
 	TextAreaId: sId,
 	TextAreaEditorHeight: 400,
 	TextAreaEditorDisplay: "onload",	
+	TextAreaEditorEditable: true,
 	OverrideInsertButtons: true,
 	LoadFieldDetailsAfterSelector: ".formulaFooter"
 }
@@ -46,6 +47,7 @@ function ActivateEditor(oFormulaEditorSettings)
 		TextAreaId: "",
 		TextAreaEditorHeight: 400,
 		TextAreaEditorDisplay: "onload",
+		TextAreaEditorEditable: true,
 		ObjectId: "",
 		ObjectAPIName: "",
 		ObjectFields: null,
@@ -77,6 +79,7 @@ function ActivateEditor(oFormulaEditorSettings)
 		,show_line_colors: true
 		,EA_load_callback: "FormulaEditAreaLoaded"
 		,display: oFormulaEditorSettings.TextAreaEditorDisplay
+		,is_editable: oFormulaEditorSettings.TextAreaEditorEditable
 	});
 }
 
@@ -313,6 +316,7 @@ function UpdateFieldDetails($fieldTR, sObjectName, iFieldIndex, oFieldParts, oFi
 			TextAreaId: sTextAreaId,
 			TextAreaEditorHeight: 200,
 			TextAreaEditorDisplay: "later",
+			TextAreaEditorEditable: false,
 			ObjectId: "",
 			ObjectAPIName: sObjectName,
 			OverrideInsertButtons: false,
