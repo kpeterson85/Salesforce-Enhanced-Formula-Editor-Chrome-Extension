@@ -185,14 +185,14 @@ function LoadFormulaFieldDetails(e)
 	
 	$table.empty();
 	
-	$table.append("<tr class='headerRow'><th>Field</th><th>Type</th><th>Details</th><th><a class='formulaFieldCompile' href='#' style='text-decoration: underline;'>(F) Compile</a></th><th>Edit</th><th>Value</th></tr>");
+	$table.append("<tr class='headerRow'><th>Field</th><th>Type</th><th>Details</th><th>Quantity</th><th><a class='formulaFieldCompile' href='#' style='text-decoration: underline;'>(F) Compile</a></th><th>Edit</th><th>Value</th></tr>");
 
 	//LOOP OVER EACH FIELD PATH AND IDENTIFY WHAT FINAL FIELD IT REPRESENTS
 	for (var i = 0; i < oFields.length; i++)
 	{
-		var oFieldParts = oFields[i].split(".");
+		var oFieldParts = oFields[i].FieldParts;
 				
-		var $fieldTR = editorJQuery("<tr id='field" + i + "' data-fieldIndex='" + i + "' class='fieldRow'><td class='fieldPath'>" + oFields[i] + "</td><td class='fieldType'></td><td class='fieldDetails'></td><td class='fieldCompile'></td><td class='fieldEdit'></td><td class='fieldValue'></td></tr>");
+		var $fieldTR = editorJQuery("<tr id='field" + i + "' data-fieldIndex='" + i + "' class='fieldRow'><td class='fieldPath'>" + oFields[i].Field + "</td><td class='fieldType'></td><td class='fieldDetails'></td><td class='fieldQuantity'>" + oFields[i].Quantity + "</td><td class='fieldCompile'></td><td class='fieldEdit'></td><td class='fieldValue'></td></tr>");
 		$table.append($fieldTR);
 		
 		FindFieldDescribeRecursive($fieldTR, oFormulaEditorSettings.ObjectAPIName, i, oFieldParts, 0, oFormulaEditorSettings.ObjectFields);
@@ -442,9 +442,33 @@ function GetFieldsFromFormula(sFormula)
 	oFields = sFormula.split(" ");
 	
 	var oUniqueFields = [];
-	editorJQuery.each(oFields, function(i, el){
-			if(editorJQuery.inArray(el, oUniqueFields) === -1) oUniqueFields.push(el);
-	});
+	for (var f = 0; f < oFields.length; f++)
+	{
+			var sField = oFields[f];
+			var oUniqueField = null;
+			//LOOK TO SEE IF WE FOUND THE FIELD ALREADY
+			for (var u = 0; u < oUniqueFields.length; u++)
+			{
+				if (oUniqueFields[u].Field == sField)
+				{
+					oUniqueField = oUniqueFields[u];
+					break;
+				}
+			}
+			
+			if (oUniqueField == null)
+			{
+				oUniqueFields.push({
+					Field: sField,
+					FieldParts: sField.split("."),
+					Quantity: 1
+				});
+			}
+			else
+			{
+				oUniqueField.Quantity += 1;
+			}
+	}
 	
 	return oUniqueFields;
 }
