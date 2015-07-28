@@ -272,11 +272,7 @@ function UpdateFieldDetails($fieldTR, sObjectName, iFieldIndex, oFieldParts, oFi
 	console.log(oFieldDescribe);
 	$fieldTR.data("fieldDescribe", oFieldDescribe);
 	$fieldTR.data("objectName", sObjectName);
-	$fieldTR.find("td.fieldType").text(oFieldDescribe.type);
-	if (oFieldDescribe.calculatedFormula != null)
-	{
-		$fieldTR.find("td.fieldType").append(" (F)");
-	}
+	$fieldTR.find("td.fieldType").text(GetFriendlyFieldType(oFieldDescribe));
 	
 	var $detailsViewLink = editorJQuery("<a href='#'>View</a>");
 	$fieldTR.find("td.fieldDetails").append($detailsViewLink);
@@ -363,6 +359,64 @@ function UpdateFieldDetails($fieldTR, sObjectName, iFieldIndex, oFieldParts, oFi
 		});
 	}
 	
+}
+
+function GetFriendlyFieldType(oFieldDescribe)
+{
+	var sFieldType = "";
+	
+	if (oFieldDescribe.type == "boolean")
+	{
+		sFieldType = "Checkbox";
+	}
+	else if (oFieldDescribe.type == "currency")
+	{
+		sFieldType = "Currency";
+	}
+	else if (oFieldDescribe.type == "date")
+	{
+		sFieldType = "Date";
+	}
+	else if (oFieldDescribe.type == "datetime")
+	{
+		sFieldType = "Date/Time";
+	}
+	else if (oFieldDescribe.type == "double")
+	{
+		sFieldType = "Number";
+	}	
+	else if (oFieldDescribe.type == "email")
+	{
+		sFieldType = "Email";
+	}	
+	else if (oFieldDescribe.type == "percent")
+	{
+		sFieldType = "Percent";
+	}
+	else if (oFieldDescribe.type == "phone")
+	{
+		sFieldType = "Phone";
+	}
+	else if (oFieldDescribe.type == "reference")
+	{
+		sFieldType = "Lookup (" + oFieldDescribe.referenceTo[0] + ")";
+	}
+	else
+	{
+		sFieldType = oFieldDescribe.type;
+	}
+	
+	if (oFieldDescribe.precision > 0)
+	{
+		sFieldType += " (" + (oFieldDescribe.precision - oFieldDescribe.scale) + ", " + (oFieldDescribe.scale) + ")";
+	}
+	
+	if (oFieldDescribe.calculatedFormula != null)
+	{
+		sFieldType = "Formula (" + sFieldType + ")";
+	}
+	
+	return sFieldType;
 }
 
 function LoadFieldValuesPreview(e)
