@@ -316,7 +316,7 @@ function UpdateFieldDetails($fieldTR, sObjectName, iFieldIndex, oFieldParts, oFi
 			TextAreaId: sTextAreaId,
 			TextAreaEditorHeight: 200,
 			TextAreaEditorDisplay: "later",
-			TextAreaEditorEditable: false,
+			TextAreaEditorEditable: true,
 			ObjectId: "",
 			ObjectAPIName: sObjectName,
 			OverrideInsertButtons: false,
