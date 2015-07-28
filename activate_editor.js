@@ -185,7 +185,7 @@ function LoadFormulaFieldDetails(e)
 	
 	$table.empty();
 	
-	$table.append("<tr class='headerRow'><th>Field</th><th>Type</th><th>Details</th><th>Quantity</th><th><a class='formulaFieldCompile' href='#' style='text-decoration: underline;'>(F) Compile</a></th><th>Edit</th><th>Value</th></tr>");
+	$table.append("<tr class='headerRow'><th>Field</th><th>Type</th><th>Details</th><th>Quantity</th><th><a class='formulaFieldCompile' href='#' style='text-decoration: underline;' title='Click to load the compile sizes of referenced formula fields.'>(F) Compile</a></th><th>Edit</th><th>Value</th></tr>");
 
 	//LOOP OVER EACH FIELD PATH AND IDENTIFY WHAT FINAL FIELD IT REPRESENTS
 	for (var i = 0; i < oFields.length; i++)
@@ -328,10 +328,12 @@ function UpdateFieldDetails($fieldTR, sObjectName, iFieldIndex, oFieldParts, oFi
 		
 		for (var v = 0; v < oFieldDescribe.picklistValues.length; v++)
 		{
-			$picklistTable.append("<tr><td>" + oFieldDescribe.picklistValues[v].label + "</td><td>" + oFieldDescribe.picklistValues[v].defaultValue + "</td></tr>");
+			$picklistTable.append("<tr><td>" + oFieldDescribe.picklistValues[v].label + "</td><td>" + ((oFieldDescribe.picklistValues[v].defaultValue == true) ? "Yes" : "No") + "</td></tr>");
 		}
 	}
 
+	//GENERATE EDIT LINK
+	//IF CUSTOM OBJECT THEN LOOKUP OBJECT ID FIRST, THEN LOOKUP CUSTOM FIELD ID
 	if (sObjectName.indexOf("__c") > -1)
 	{
 		jsforceConnection.tooling.sobject('CustomObject')
@@ -350,13 +352,24 @@ function UpdateFieldDetails($fieldTR, sObjectName, iFieldIndex, oFieldParts, oFi
 	}
 	else
 	{
-		jsforceConnection.tooling.sobject('CustomField')
-		.find({ TableEnumOrId: sObjectName, DeveloperName: oFieldDescribe.name.replace("__c", "") })
-		.execute(function(err, records) {
-			if (err) { return console.error(err); }
-			console.log("fetched : " + records[0]);
-			$fieldTR.find("td.fieldEdit").append("<a href='/" + records[0].Id + "/e' target='_blank'>Edit</a>");
-		});
+		//IF STANDARD OBJECT BUT CUSTOM FIELD THEN LOOKUP CUSTOM FIELD ID
+		if (oFieldDescribe.name.indexOf("__c") > -1)
+		{
+			jsforceConnection.tooling.sobject('CustomField')
+			.find({ TableEnumOrId: sObjectName, DeveloperName: oFieldDescribe.name.replace("__c", "") })
+			.execute(function(err, records) {
+				if (err) { return console.error(err); }
+				console.log("fetched : " + records[0]);
+				$fieldTR.find("td.fieldEdit").append("<a href='/" + records[0].Id + "/e' target='_blank'>Edit</a>");
+			});
+		}
+		else
+		{
+			//IF STANDARD OBJECT AND STANDARD FIELD THEN GO TO STANDARD SALESFORCE URL
+			var sURL = "/p/setup/field/StandardFieldAttributes/d?id=" + oFieldDescribe.name + "&type=" + sObjectName;
+			$fieldTR.find("td.fieldEdit").append("<a href='" + sURL + "' target='_blank'>Edit</a>");
+			
+		}
 	}
 	
 }
@@ -397,6 +410,11 @@ function GetFriendlyFieldType(oFieldDescribe)
 	{
 		sFieldType = "Phone";
 	}
+	else if (oFieldDescribe.type == "picklist")
+	{
+		sFieldType = "Picklist";
+	}
+
 	else if (oFieldDescribe.type == "reference")
 	{
 		sFieldType = "Lookup (" + oFieldDescribe.referenceTo[0] + ")";
