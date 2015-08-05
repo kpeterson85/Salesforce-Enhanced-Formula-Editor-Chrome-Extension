@@ -235,7 +235,7 @@ function LoadFormulaFieldDetails(e)
 	
 	$table.find("tr.headerRow a.formulaFieldCompile").click(function()
 	{
-		$table.find("> tbody > tr.fieldRow > td.fieldEdit").each(function()
+		$table.find("> tbody > tr.fieldRow:not(.thisField) > td.fieldEdit").each(function()
 		{
 			var $trField = editorJQuery(this).parent();
 			var oFieldDescribe = $trField.data("fieldDescribe");
