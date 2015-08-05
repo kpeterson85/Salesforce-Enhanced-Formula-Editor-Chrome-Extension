@@ -132,7 +132,7 @@ function FormulaEditAreaLoaded(sTextAreaId)
 	//SETUP FIELD DETAILS IF WE CAN IDENTIFY WHAT OBJECT WE ARE WORKING WITH
 	if (oFormulaEditorSettings.ObjectId != "" || oFormulaEditorSettings.ObjectAPIName != "")
 	{
-		var $fieldDetails = editorJQuery("<input type='submit' class='btn formulaEditorFieldsLoad' style='float: left;' value='Load Field Details' /><div class='formulaEditorFields' style='display: none;'><div class='fieldValuesPreviewShell' style='display: inline; text-align: right; float: right;'><input type='text' class='fieldValuesPreviewId' placeholder='Enter Record Id' /> <input type='button' class='fieldValuesPreviewButton btn' value='Preview Values' /></div><table class='formulaEditorFieldsTable list'></table></div>");
+		var $fieldDetails = editorJQuery("<input type='submit' class='btn formulaEditorFieldsLoad' style='float: left;' value='Load Field Details' /><div class='formulaEditorFields' style='display: none;'><div class='fieldValuesPreviewShell' style='display: inline; text-align: right; float: right;'><input type='text' class='fieldValuesPreviewId' placeholder='Enter Record Id' /> <input type='button' class='fieldValuesPreviewButton btn' value='Load Record Values' /></div><table class='formulaEditorFieldsTable list'></table></div>");
 		
 		$loadButton = $fieldDetails.filter("input.formulaEditorFieldsLoad");
 		$loadButton.data("formulaEditorSettings", oFormulaEditorSettings);
@@ -212,14 +212,27 @@ function LoadFormulaFieldDetails(e)
 	
 	$table.empty();
 	
-	$table.append("<tr class='headerRow'><th>Field</th><th>Type</th><th>Details</th><th>Quantity</th><th><a class='formulaFieldCompile' href='#' style='text-decoration: underline;' title='Click to load the compile sizes of referenced formula fields.'>Compile</a></th><th>Edit</th><th>Value</th></tr>");
+	$table.append("<tr class='headerRow'><th>Field</th><th>Type</th><th>Quantity</th><th><a class='formulaFieldCompile' href='#' style='text-decoration: underline;'>Compile</a><span class='formulaEditorTooltip' title='Click the link to load the compile sizes of referenced formula fields.'>?</span></th><th>Details</th><th>Edit</th><th>Value <span class='formulaEditorTooltip' title='Enter a record id above and click the Load Record Values button to see the values of the fields below.'>?</span></th></tr>");
 
+	//APPLY TOOLTIP STYLES THIS WAY SO WE DON'T HAVE TO ADD STYLESHEET TO PAGE
+	var oTooltipStyles = {
+		"background-color": "#CCCCCC",
+		"border-radius": "10px",
+		"display": "inline-block",
+		"height": "12px",
+		"width": "12px",
+		"text-align": "center",
+		"cursor": "default",
+		"margin-left": "3px"
+	};
+	$table.find(".formulaEditorTooltip").css(oTooltipStyles);
+	
 	//LOOP OVER EACH FIELD PATH AND IDENTIFY WHAT FINAL FIELD IT REPRESENTS
 	for (var i = 0; i < oFields.length; i++)
 	{
 		var oFieldParts = oFields[i].FieldParts;
 				
-		var $fieldTR = editorJQuery("<tr id='field" + i + "' data-fieldIndex='" + i + "' class='fieldRow'><td class='fieldPath'>" + oFields[i].Field + "</td><td class='fieldType'></td><td class='fieldDetails'></td><td class='fieldQuantity'>" + oFields[i].Quantity + "</td><td class='fieldCompile'></td><td class='fieldEdit'></td><td class='fieldValue'></td></tr>");
+		var $fieldTR = editorJQuery("<tr id='field" + i + "' data-fieldIndex='" + i + "' class='fieldRow'><td class='fieldPath'>" + oFields[i].Field + "</td><td class='fieldType'></td><td class='fieldQuantity'>" + oFields[i].Quantity + "</td><td class='fieldCompile'></td><td class='fieldDetails'></td><td class='fieldEdit'></td><td class='fieldValue'></td></tr>");
 		$table.append($fieldTR);
 		
 		if (oFields[i].ThisField == false)
@@ -310,11 +323,11 @@ function UpdateFieldDetails($fieldTR, sObjectLookupFieldName, sObjectName, iFiel
 	$fieldTR.data("objectLookupFieldName", sObjectLookupFieldName);
 	$fieldTR.find("td.fieldType").text(GetFriendlyFieldType(oFieldDescribe));
 	
-	var $detailsViewLink = editorJQuery("<a href='#'>View</a>");
+	var $detailsViewLink = editorJQuery("<a href='#'>Show</a>");
 	$fieldTR.find("td.fieldDetails").append($detailsViewLink);
 	$detailsViewLink.click(function()
 	{
-		if ($detailsViewLink.text() == "View")
+		if ($detailsViewLink.text() == "Show")
 		{
 			editorJQuery(this).closest("tr").next().show();
 			$detailsViewLink.text("Hide");
@@ -324,7 +337,7 @@ function UpdateFieldDetails($fieldTR, sObjectLookupFieldName, sObjectName, iFiel
 		else
 		{
 			editorJQuery(this).closest("tr").next().hide();
-			$detailsViewLink.text("View");
+			$detailsViewLink.text("Show");
 		}
 		return false;
 	});
@@ -337,6 +350,7 @@ function UpdateFieldDetails($fieldTR, sObjectLookupFieldName, sObjectName, iFiel
 	$fieldDetailsTC.append($detailsTable);
 	
 	$detailsTable.append("<tr><td>Label</td><td>" + oFieldDescribe.label + "</td></tr>");
+	$detailsTable.append("<tr><td>Help Text</td><td>" + ((oFieldDescribe.inlineHelpText != null) ? oFieldDescribe.inlineHelpText : "")  + "</td></tr>");
 	
 	if (oFieldDescribe.calculatedFormula != null)
 	{
@@ -370,6 +384,8 @@ function UpdateFieldDetails($fieldTR, sObjectLookupFieldName, sObjectName, iFiel
 
 	//GENERATE EDIT LINK
 	//IF CUSTOM OBJECT THEN LOOKUP OBJECT ID FIRST, THEN LOOKUP CUSTOM FIELD ID
+	/*
+	//COMMENTED THIS OUT TO AVOID USERS HITTING LIMIT ISSUES, NEED TO OPTIMIZE THESE CALLS TO SHARE DATA ACROSS FIELDS
 	if (sObjectName.indexOf("__c") > -1)
 	{
 		jsforceConnection.tooling.sobject('CustomObject')
@@ -407,6 +423,7 @@ function UpdateFieldDetails($fieldTR, sObjectLookupFieldName, sObjectName, iFiel
 			
 		}
 	}
+	*/
 	
 }
 
