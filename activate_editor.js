@@ -50,6 +50,19 @@ window.jsforceConnection = new jsforce.Connection({
 	sessionId : readCookie("sid")
 });	
 
+var oEditorTooltipStyles = {
+	"background-color": "#CCCCCC",
+	"border-radius": "10px",
+	"display": "inline-block",
+	"height": "11px",
+	"width": "11px",
+	"text-align": "center",
+	"cursor": "default",
+	"margin-left": "3px",
+	"font-size": "10px",
+	"font-weight": "normal"
+};
+
 ActivateEditor(oFormulaEditorSettings);
 
 function ActivateEditor(oFormulaEditorSettings)
@@ -61,6 +74,7 @@ function ActivateEditor(oFormulaEditorSettings)
 		TextAreaEditorEditable: true,
 		ObjectId: "",
 		ObjectAPIName: "",
+		ObjectLabel: "",
 		ObjectFields: null,
 		FieldDetailsShellId: "",
 		OverrideInsertButtons: false,
@@ -132,9 +146,9 @@ function FormulaEditAreaLoaded(sTextAreaId)
 	//SETUP FIELD DETAILS IF WE CAN IDENTIFY WHAT OBJECT WE ARE WORKING WITH
 	if (oFormulaEditorSettings.ObjectId != "" || oFormulaEditorSettings.ObjectAPIName != "")
 	{
-		var $fieldDetails = editorJQuery("<input type='submit' class='btn formulaEditorFieldsLoad' style='float: left;' value='Load Field Details' /><div class='formulaEditorFields' style='display: none;'><div class='fieldValuesPreviewShell' style='display: inline; text-align: right; float: right;'><input type='text' class='fieldValuesPreviewId' placeholder='Enter Record Id' /> <input type='button' class='fieldValuesPreviewButton btn' value='Load Record Values' /></div><table class='formulaEditorFieldsTable list'></table></div>");
-		
-		$loadButton = $fieldDetails.filter("input.formulaEditorFieldsLoad");
+		var $fieldDetails = editorJQuery("<span class='formulaEditorFieldsLoadShell' style='float: left;'><input type='submit' class='btn formulaEditorFieldsLoad' value='Load Field Details' /><span class='formulaEditorTooltip' title='Loads details about the fields found in the formula.'>?</span></span><div class='formulaEditorFields' style='display: none;'><div class='fieldValuesPreviewShell' style='display: inline; text-align: right; float: right;'><input type='text' class='fieldValuesPreviewId' placeholder='Enter Record Id' /> <input type='button' class='fieldValuesPreviewButton btn' value='Load Record Values' /></div><table class='formulaEditorFieldsTable list'></table></div>");
+					
+		$loadButton = $fieldDetails.find("input.formulaEditorFieldsLoad");
 		$loadButton.data("formulaEditorSettings", oFormulaEditorSettings);
 		
 		$fieldsShell = $fieldDetails.filter("div.formulaEditorFields");
@@ -149,6 +163,15 @@ function FormulaEditAreaLoaded(sTextAreaId)
 		$fieldsTable = $fieldDetails.find("table.formulaEditorFieldsTable");
 		oFormulaEditorSettings.FieldsTable = $fieldsTable;
 		
+		if (oFormulaEditorSettings.OverrideInsertButtons == true)
+		{
+			$fieldDetails.find(".formulaEditorTooltip").css(oEditorTooltipStyles);
+		}
+		else
+		{
+			$fieldDetails.find(".formulaEditorTooltip").remove();
+		}
+		
 		editorJQuery(oFormulaEditorSettings.LoadFieldDetailsAfterSelector).after($fieldDetails);
 		
 		$loadButton.click(LoadFormulaFieldDetails);
@@ -162,6 +185,7 @@ function FormulaEditAreaLoaded(sTextAreaId)
 				//LOAD CURRENT OBJECT FIELDS
 				jsforceConnection.sobject(oFormulaEditorSettings.ObjectAPIName).describe$(function(err, meta) {
 					if (err) { return console.error(err); }
+					oFormulaEditorSettings.ObjectLabel = meta.label;
 					oFormulaEditorSettings.ObjectFields = meta.fields;
 				});
 			});
@@ -171,6 +195,7 @@ function FormulaEditAreaLoaded(sTextAreaId)
 			//LOAD CURRENT OBJECT FIELDS
 			jsforceConnection.sobject(oFormulaEditorSettings.ObjectAPIName).describe$(function(err, meta) {
 				if (err) { return console.error(err); }
+				oFormulaEditorSettings.ObjectLabel = meta.label;
 				oFormulaEditorSettings.ObjectFields = meta.fields;
 			});
 		}
@@ -212,27 +237,17 @@ function LoadFormulaFieldDetails(e)
 	
 	$table.empty();
 	
-	$table.append("<tr class='headerRow'><th>Field</th><th>Type</th><th>Quantity</th><th><a class='formulaFieldCompile' href='#' style='text-decoration: underline;'>Compile</a><span class='formulaEditorTooltip' title='Click the link to load the compile sizes of referenced formula fields.'>?</span></th><th>Details</th><th>Edit</th><th>Value <span class='formulaEditorTooltip' title='Enter a record id above and click the Load Record Values button to see the values of the fields below.'>?</span></th></tr>");
+	$table.append("<tr class='headerRow'><th>Field</th><th>Type</th><th>Quantity</th><th><a class='formulaFieldCompile' href='#' style='text-decoration: underline;'>Compile</a><span class='formulaEditorTooltip' title='Click the link to load the compile sizes of referenced formula fields.'>?</span></th><th><a class='loadFieldEditLinks' href='#' style='text-decoration: underline;'>Edit</a><span class='formulaEditorTooltip' title='Click the link to load the edit links for the fields.'>?</span></th><th>Value <span class='formulaEditorTooltip' title='Enter a record id above and click the Load Record Values button to see the values of the fields below.'>?</span></th></tr>");
 
 	//APPLY TOOLTIP STYLES THIS WAY SO WE DON'T HAVE TO ADD STYLESHEET TO PAGE
-	var oTooltipStyles = {
-		"background-color": "#CCCCCC",
-		"border-radius": "10px",
-		"display": "inline-block",
-		"height": "12px",
-		"width": "12px",
-		"text-align": "center",
-		"cursor": "default",
-		"margin-left": "3px"
-	};
-	$table.find(".formulaEditorTooltip").css(oTooltipStyles);
+	$table.find(".formulaEditorTooltip").css(oEditorTooltipStyles);
 	
 	//LOOP OVER EACH FIELD PATH AND IDENTIFY WHAT FINAL FIELD IT REPRESENTS
 	for (var i = 0; i < oFields.length; i++)
 	{
 		var oFieldParts = oFields[i].FieldParts;
 				
-		var $fieldTR = editorJQuery("<tr id='field" + i + "' data-fieldIndex='" + i + "' class='fieldRow'><td class='fieldPath'>" + oFields[i].Field + "</td><td class='fieldType'></td><td class='fieldQuantity'>" + oFields[i].Quantity + "</td><td class='fieldCompile'></td><td class='fieldDetails'></td><td class='fieldEdit'></td><td class='fieldValue'></td></tr>");
+		var $fieldTR = editorJQuery("<tr id='field" + i + "' data-fieldIndex='" + i + "' class='fieldRow'><td class='fieldPath'><img class='fieldDetailsToggle' style='cursor: pointer; margin-top: -2px;' data-state='collapsed' src='/img/alohaSkin/setup/setup_plus_lev1.gif' />" + oFields[i].Field + "</td><td class='fieldType'></td><td class='fieldQuantity'>" + oFields[i].Quantity + "</td><td class='fieldCompile'></td><td class='fieldEdit'></td><td class='fieldValue'></td></tr>");
 		$table.append($fieldTR);
 		
 		if (oFields[i].ThisField == false)
@@ -273,6 +288,60 @@ function LoadFormulaFieldDetails(e)
 		});
 		
 		return false;
+	});
+	
+	$table.find("tr.headerRow a.loadFieldEditLinks").click(function()
+	{
+		//LOOP OVER EACH FIELD EXCEPT THE FIELD WE ARE EDITING
+		$table.find("> tbody > tr.fieldRow:not(.thisField)").each(function()
+		{
+			var $fieldTR = editorJQuery(this);
+			
+			var oFieldDescribe = $fieldTR.data("fieldDescribe");
+			var sObjectName = $fieldTR.data("objectName");
+			
+			//GENERATE EDIT LINK
+			//IF CUSTOM OBJECT THEN LOOKUP OBJECT ID FIRST, THEN LOOKUP CUSTOM FIELD ID
+			if (sObjectName.indexOf("__c") > -1)
+			{
+				jsforceConnection.tooling.sobject('CustomObject')
+				.find({ DeveloperName: sObjectName.replace("__c", "") })
+				.execute(function(err, records) {
+					if (err) { return console.error(err); }
+					console.log("fetched : " + records);
+					jsforceConnection.tooling.sobject('CustomField')
+					.find({ TableEnumOrId: records[0].Id, DeveloperName: oFieldDescribe.name.replace("__c", "") })
+					.execute(function(err, records) {
+						if (err) { return console.error(err); }
+						console.log("fetched : " + records[0]);
+						$fieldTR.find("td.fieldEdit").append("<a href='/" + records[0].Id + "/e' target='_blank'>Edit</a>");
+					});
+				});
+			}
+			else
+			{
+				//IF STANDARD OBJECT BUT CUSTOM FIELD THEN LOOKUP CUSTOM FIELD ID
+				if (oFieldDescribe.name.indexOf("__c") > -1)
+				{
+					jsforceConnection.tooling.sobject('CustomField')
+					.find({ TableEnumOrId: sObjectName, DeveloperName: oFieldDescribe.name.replace("__c", "") })
+					.execute(function(err, records) {
+						if (err) { return console.error(err); }
+						console.log("fetched : " + records[0]);
+						$fieldTR.find("td.fieldEdit").append("<a href='/" + records[0].Id + "/e' target='_blank'>Edit</a>");
+					});
+				}
+				else
+				{
+					//IF STANDARD OBJECT AND STANDARD FIELD THEN GO TO STANDARD SALESFORCE URL
+					var sURL = "/p/setup/field/StandardFieldAttributes/d?id=" + oFieldDescribe.name + "&type=" + sObjectName;
+					$fieldTR.find("td.fieldEdit").append("<a href='" + sURL + "' target='_blank'>Edit</a>");
+					
+				}
+			}
+		});	
+
+		return false;		
 	});
 	
 	oFormulaEditorSettings.FieldsShell.show();
@@ -323,32 +392,34 @@ function UpdateFieldDetails($fieldTR, sObjectLookupFieldName, sObjectName, iFiel
 	$fieldTR.data("objectLookupFieldName", sObjectLookupFieldName);
 	$fieldTR.find("td.fieldType").text(GetFriendlyFieldType(oFieldDescribe));
 	
-	var $detailsViewLink = editorJQuery("<a href='#'>Show</a>");
-	$fieldTR.find("td.fieldDetails").append($detailsViewLink);
+	var $detailsViewLink = $fieldTR.find("td.fieldPath img.fieldDetailsToggle");
 	$detailsViewLink.click(function()
 	{
-		if ($detailsViewLink.text() == "Show")
+		if ($detailsViewLink.attr("data-state") == "collapsed")
 		{
 			editorJQuery(this).closest("tr").next().show();
-			$detailsViewLink.text("Hide");
+			$detailsViewLink.attr("src", "/img/alohaSkin/setup/setup_minus_lev1.gif");
+			$detailsViewLink.attr("data-state", "expanded");
 			//attempt to turn on a formula editor if it exists
 			editorJQuery(this).closest("tr").next().find("label:contains('Toggle editor')").prev().filter(":not(:checked)").click();
 		}
 		else
 		{
 			editorJQuery(this).closest("tr").next().hide();
-			$detailsViewLink.text("Show");
+			$detailsViewLink.attr("src", "/img/alohaSkin/setup/setup_plus_lev1.gif");
+			$detailsViewLink.attr("data-state", "collapsed");
 		}
 		return false;
 	});
 	
-	var $fieldDetailsTR = editorJQuery("<tr class='fieldDetailsRow' style='display: none;'><td style='padding-left: 30px;' colspan='" + $fieldTR.children().length + "'></td></tr>");
+	var $fieldDetailsTR = editorJQuery("<tr class='fieldDetailsRow' style='display: none;'><td style='padding-left: 20px;' colspan='" + $fieldTR.children().length + "'></td></tr>");
 	$fieldTR.after($fieldDetailsTR);
 	
 	var $fieldDetailsTC = $fieldDetailsTR.children(0);
 	var $detailsTable = editorJQuery("<table class='list'><tr class='headerRow'><th>Detail</th><th>Value</th></tr></table>");
 	$fieldDetailsTC.append($detailsTable);
 	
+	$detailsTable.append("<tr><td>Object</td><td>" + sObjectName + "</td></tr>");
 	$detailsTable.append("<tr><td>Label</td><td>" + oFieldDescribe.label + "</td></tr>");
 	$detailsTable.append("<tr><td>Help Text</td><td>" + ((oFieldDescribe.inlineHelpText != null) ? oFieldDescribe.inlineHelpText : "")  + "</td></tr>");
 	
@@ -380,51 +451,7 @@ function UpdateFieldDetails($fieldTR, sObjectLookupFieldName, sObjectName, iFiel
 		{
 			$picklistTable.append("<tr><td>" + oFieldDescribe.picklistValues[v].label + "</td><td>" + ((oFieldDescribe.picklistValues[v].defaultValue == true) ? "Yes" : "No") + "</td></tr>");
 		}
-	}
-
-	//GENERATE EDIT LINK
-	//IF CUSTOM OBJECT THEN LOOKUP OBJECT ID FIRST, THEN LOOKUP CUSTOM FIELD ID
-	/*
-	//COMMENTED THIS OUT TO AVOID USERS HITTING LIMIT ISSUES, NEED TO OPTIMIZE THESE CALLS TO SHARE DATA ACROSS FIELDS
-	if (sObjectName.indexOf("__c") > -1)
-	{
-		jsforceConnection.tooling.sobject('CustomObject')
-		.find({ DeveloperName: sObjectName.replace("__c", "") })
-		.execute(function(err, records) {
-			if (err) { return console.error(err); }
-			console.log("fetched : " + records);
-			jsforceConnection.tooling.sobject('CustomField')
-			.find({ TableEnumOrId: records[0].Id, DeveloperName: oFieldDescribe.name.replace("__c", "") })
-			.execute(function(err, records) {
-				if (err) { return console.error(err); }
-				console.log("fetched : " + records[0]);
-				$fieldTR.find("td.fieldEdit").append("<a href='/" + records[0].Id + "/e' target='_blank'>Edit</a>");
-			});
-		});
-	}
-	else
-	{
-		//IF STANDARD OBJECT BUT CUSTOM FIELD THEN LOOKUP CUSTOM FIELD ID
-		if (oFieldDescribe.name.indexOf("__c") > -1)
-		{
-			jsforceConnection.tooling.sobject('CustomField')
-			.find({ TableEnumOrId: sObjectName, DeveloperName: oFieldDescribe.name.replace("__c", "") })
-			.execute(function(err, records) {
-				if (err) { return console.error(err); }
-				console.log("fetched : " + records[0]);
-				$fieldTR.find("td.fieldEdit").append("<a href='/" + records[0].Id + "/e' target='_blank'>Edit</a>");
-			});
-		}
-		else
-		{
-			//IF STANDARD OBJECT AND STANDARD FIELD THEN GO TO STANDARD SALESFORCE URL
-			var sURL = "/p/setup/field/StandardFieldAttributes/d?id=" + oFieldDescribe.name + "&type=" + sObjectName;
-			$fieldTR.find("td.fieldEdit").append("<a href='" + sURL + "' target='_blank'>Edit</a>");
-			
-		}
-	}
-	*/
-	
+	}	
 }
 
 function GetFriendlyFieldType(oFieldDescribe)
