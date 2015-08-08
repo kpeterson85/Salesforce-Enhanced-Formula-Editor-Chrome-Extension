@@ -217,18 +217,24 @@ function LoadFormulaFieldDetails(e)
 {	
 	var oFormulaEditorSettings = editorJQuery(this).data("formulaEditorSettings");
 	
+	if (oFormulaEditorSettings.ObjectFields == null)
+	{
+		//USER CLICKED THE LOAD BUTTON TOO QUICK, STILL WAITING FOR THE CURRENT OBJECT META DATA TO LOAD
+		return false;
+	}
+	
 	var sFormula = editAreaLoader.getValue(oFormulaEditorSettings.TextAreaId);
 	var oFields = GetFieldsFromFormula(sFormula);
 	
 	//ADD THE CURRENT FIELD WE ARE EDITING SO WE CAN TEST ITS VALUE AS WELL
 	if (sId == "CalculatedFormula" && oFormulaEditorSettings.OverrideInsertButtons == true)
 	{
-		var sThisFieldName = editorJQuery("#DeveloperName").val() + "__c";
+		var sResultFieldName = editorJQuery("#DeveloperName").val() + "__c";
 		oFields.push({
-			Field: sThisFieldName,
-			FieldParts: sThisFieldName.split("."),
+			Field: sResultFieldName,
+			FieldParts: sResultFieldName.split("."),
 			Quantity: "",
-			ThisField: true
+			ResultField: true
 		});
 	}
 	
@@ -237,7 +243,7 @@ function LoadFormulaFieldDetails(e)
 	
 	$table.empty();
 	
-	$table.append("<tr class='headerRow'><th>Field</th><th>Type</th><th>Quantity</th><th><a class='formulaFieldCompile' href='#' style='text-decoration: underline;'>Compile</a><span class='formulaEditorTooltip' title='Click the link to load the compile sizes of referenced formula fields.'>?</span></th><th><a class='loadFieldEditLinks' href='#' style='text-decoration: underline;'>Edit</a><span class='formulaEditorTooltip' title='Click the link to load the edit links for the fields.'>?</span></th><th>Value <span class='formulaEditorTooltip' title='Enter a record id above and click the Load Record Values button to see the values of the fields below.'>?</span></th></tr>");
+	$table.append("<tr class='headerRow'><th width='11'></th><th>Field</th><th>Type</th><th>Quantity</th><th><a class='formulaFieldCompile' href='#' style='text-decoration: underline;'>Compile</a><span class='formulaEditorTooltip' title='Click the link to load the compile sizes of referenced formula fields.'>?</span></th><th><a class='loadFieldEditLinks' href='#' style='text-decoration: underline;'>Edit</a><span class='formulaEditorTooltip' title='Click the link to load the edit links for the fields.'>?</span></th><th>Value <span class='formulaEditorTooltip' title='Enter a record id above and click the Load Record Values button to see the values of the fields below.'>?</span></th></tr>");
 
 	//APPLY TOOLTIP STYLES THIS WAY SO WE DON'T HAVE TO ADD STYLESHEET TO PAGE
 	$table.find(".formulaEditorTooltip").css(oEditorTooltipStyles);
@@ -247,44 +253,45 @@ function LoadFormulaFieldDetails(e)
 	{
 		var oFieldParts = oFields[i].FieldParts;
 				
-		var $fieldTR = editorJQuery("<tr id='field" + i + "' data-fieldIndex='" + i + "' class='fieldRow'><td class='fieldPath'><img class='fieldDetailsToggle' style='cursor: pointer; margin-top: -2px;' data-state='collapsed' src='/img/alohaSkin/setup/setup_plus_lev1.gif' />" + oFields[i].Field + "</td><td class='fieldType'></td><td class='fieldQuantity'>" + oFields[i].Quantity + "</td><td class='fieldCompile'></td><td class='fieldEdit'></td><td class='fieldValue'></td></tr>");
+		var $fieldTR = editorJQuery("<tr id='field" + i + "' data-fieldIndex='" + i + "' class='fieldRow'><td class='fieldDetails' valign='middle' align='center'></td><td class='fieldPath'>" + oFields[i].Field + "</td><td class='fieldType'></td><td class='fieldQuantity'>" + oFields[i].Quantity + "</td><td class='fieldCompile'></td><td class='fieldEdit'></td><td class='fieldValue'></td></tr>");
 		$table.append($fieldTR);
 		
-		if (oFields[i].ThisField == false)
+		if (oFields[i].ResultField == true)
 		{
-			FindFieldDescribeRecursive($fieldTR, null, oFormulaEditorSettings.ObjectAPIName, i, oFieldParts, 0, oFormulaEditorSettings.ObjectFields);
+			$fieldTR.addClass("resultField").addClass("valueField").css("background-color", "#818290").find("td.fieldPath").text(oFields[i].Field);
+			$fieldTR.find("td").css("color", "#FFFFFF");
+		}
+		else if (oFields[i].Field.indexOf("$") === 0)
+		{
+			$fieldTR.addClass("systemField").find("td.fieldPath").text(oFields[i].Field);
+			$fieldTR.find("td.fieldType").text("System");
 		}
 		else
 		{
-			$fieldTR.addClass("thisField").css("background-color", "#818290").find("td.fieldPath").text(oFields[i].Field);
-			$fieldTR.find("td").css("color", "#FFFFFF");
+			$fieldTR.addClass("detailField").addClass("valueField")
+			FindFieldDescribeRecursive($fieldTR, null, oFormulaEditorSettings.ObjectAPIName, i, oFieldParts, 0, oFormulaEditorSettings.ObjectFields);
 		}
 	}
 	
 	$table.find("tr.headerRow a.formulaFieldCompile").click(function()
 	{
-		$table.find("> tbody > tr.fieldRow:not(.thisField) > td.fieldEdit").each(function()
+		$table.find("> tbody > tr.formulaField > td.fieldEdit").each(function()
 		{
-			var $trField = editorJQuery(this).parent();
-			var oFieldDescribe = $trField.data("fieldDescribe");
-			if (oFieldDescribe.calculatedFormula != null)
+			var $tdCompileField = editorJQuery(this).parent().find("> td.fieldCompile");
+			$tdCompileField.text("Loading");
+			var sEditURL = editorJQuery(this).find("a").attr("href");
+			editorJQuery.get(sEditURL, function(data)
 			{
-				var $tdCompileField = editorJQuery(this).parent().find("> td.fieldCompile");
-				$tdCompileField.text("Loading");
-				var sEditURL = editorJQuery(this).find("a").attr("href");
-				editorJQuery.get(sEditURL, function(data)
+				var $form = editorJQuery(data).find("#editPage");
+				$form.find("input[type='submit'][name!='validateDefaultFormula']").remove();
+				editorJQuery.post(sEditURL, $form.serialize(), function(data)
 				{
-					var $form = editorJQuery(data).find("#editPage");
-					$form.find("input[type='submit'][name!='validateDefaultFormula']").remove();
-					editorJQuery.post(sEditURL, $form.serialize(), function(data)
-					{
-						var sCompileSize = editorJQuery(data).find("#validationStatus").text();
-						sCompileSize = sCompileSize.replace("No syntax errors in merge fields or functions. (Compiled size: ", "");
-						sCompileSize = sCompileSize.replace(" characters)", "");
-						$tdCompileField.text(sCompileSize.trim());
-					});
+					var sCompileSize = editorJQuery(data).find("#validationStatus").text();
+					sCompileSize = sCompileSize.replace("No syntax errors in merge fields or functions. (Compiled size: ", "");
+					sCompileSize = sCompileSize.replace(" characters)", "");
+					$tdCompileField.text(sCompileSize.trim());
 				});
-			}
+			});
 		});
 		
 		return false;
@@ -293,7 +300,7 @@ function LoadFormulaFieldDetails(e)
 	$table.find("tr.headerRow a.loadFieldEditLinks").click(function()
 	{
 		//LOOP OVER EACH FIELD EXCEPT THE FIELD WE ARE EDITING
-		$table.find("> tbody > tr.fieldRow:not(.thisField)").each(function()
+		$table.find("> tbody > tr.detailField").each(function()
 		{
 			var $fieldTR = editorJQuery(this);
 			
@@ -382,6 +389,11 @@ function FindFieldDescribeRecursive($fieldTR, sObjectLookupFieldName, sObjectNam
 			}
 		}
 	}
+	
+	if (oFieldDescribe == null)
+	{
+		$fieldTR.find("td.fieldType").html("Not Found <span class='formulaEditorTooltip' title='The field could not be found because you do not have access to it on the object.'>?</span>").find(".formulaEditorTooltip").css(oEditorTooltipStyles);
+	}
 }
 
 function UpdateFieldDetails($fieldTR, sObjectLookupFieldName, sObjectName, iFieldIndex, oFieldParts, oFieldDescribe)
@@ -390,9 +402,10 @@ function UpdateFieldDetails($fieldTR, sObjectLookupFieldName, sObjectName, iFiel
 	$fieldTR.data("fieldDescribe", oFieldDescribe);
 	$fieldTR.data("objectName", sObjectName);
 	$fieldTR.data("objectLookupFieldName", sObjectLookupFieldName);
+	$fieldTR.find("td.fieldDetails").append("<img class='fieldDetailsToggle' style='cursor: pointer; margin-top: 1px;' data-state='collapsed' src='/img/alohaSkin/setup/setup_plus_lev1.gif' />");
 	$fieldTR.find("td.fieldType").text(GetFriendlyFieldType(oFieldDescribe));
 	
-	var $detailsViewLink = $fieldTR.find("td.fieldPath img.fieldDetailsToggle");
+	var $detailsViewLink = $fieldTR.find("td.fieldDetails img.fieldDetailsToggle");
 	$detailsViewLink.click(function()
 	{
 		if ($detailsViewLink.attr("data-state") == "collapsed")
@@ -416,7 +429,7 @@ function UpdateFieldDetails($fieldTR, sObjectLookupFieldName, sObjectName, iFiel
 	$fieldTR.after($fieldDetailsTR);
 	
 	var $fieldDetailsTC = $fieldDetailsTR.children(0);
-	var $detailsTable = editorJQuery("<table class='list'><tr class='headerRow'><th>Detail</th><th>Value</th></tr></table>");
+	var $detailsTable = editorJQuery("<table class='list'><tr class='headerRow'><th width='80'>Detail</th><th>Value</th></tr></table>");
 	$fieldDetailsTC.append($detailsTable);
 	
 	$detailsTable.append("<tr><td>Object</td><td>" + sObjectName + "</td></tr>");
@@ -425,13 +438,15 @@ function UpdateFieldDetails($fieldTR, sObjectLookupFieldName, sObjectName, iFiel
 	
 	if (oFieldDescribe.calculatedFormula != null)
 	{
+		$fieldTR.addClass("formulaField");
+		
 		var sTextAreaId = sObjectName+"-"+oFieldDescribe.name;
 		$detailsTable.append("<tr><td>Formula</td><td><textarea id='" + sTextAreaId + "' cols='80' rows='10' style='width: 99%; height: 15em;' wrap='soft'></textarea><div id='"+sTextAreaId+"Footer'></div></td></tr>");
 		editorJQuery("#" + sTextAreaId).val(oFieldDescribe.calculatedFormula);
 		
 		var oSubFormulaEditorSettings = {
 			TextAreaId: sTextAreaId,
-			TextAreaEditorHeight: 200,
+			TextAreaEditorHeight: 250,
 			TextAreaEditorDisplay: "later",
 			TextAreaEditorEditable: true,
 			ObjectId: "",
@@ -534,14 +549,14 @@ function LoadFieldValuesPreview(e)
 	//LOOP OVER FIELD DETAIL TABLE ROWS AND BUILD SOQL QUERY
 	var oFields = [];
 	var oFormulaFieldParentFields = [];
-	oFormulaEditorSettings.FieldsTable.find("> tbody > tr.fieldRow > td.fieldPath").each(function()
+	oFormulaEditorSettings.FieldsTable.find("> tbody > tr.valueField > td.fieldPath").each(function()
 	{
 		var sField = editorJQuery(this).text();
 		oFields.push(sField);
 
 		/* STILL NEED TO FIGURE OUT HOW TO REQUEST THE LOOKUP RECORD ID AND LOAD IT INTO SUB FORMULA FIELDS
 		//DON'T ATTEMPT FOR THE FIELD THE FORMULA IS LOADED FROM
-		if (editorJQuery(this).parent().is(".thisField") == false)
+		if (editorJQuery(this).parent().is(".resultField") == false)
 		{
 			var oFieldDescribe = editorJQuery(this).parent().data("fieldDescribe");		
 			if (oFieldDescribe.calculatedFormula != null)
@@ -569,21 +584,21 @@ function LoadFieldValuesPreview(e)
 			if(editorJQuery.inArray(el, oUniqueRequestFields) === -1) oUniqueRequestFields.push(el);
 	});
 	
-	
 	jsforceConnection.query("SELECT " + oUniqueRequestFields.join(",") + " FROM " + oFormulaEditorSettings.ObjectAPIName + " WHERE Id = '" + sRecordId + "'", function(err, result) {
 		if (err) { return console.error(err); }
 		var oRecord = result.records[0];
 		console.log(oRecord);
-		for (var f = 0; f < oFields.length; f++)
+		oFormulaEditorSettings.FieldsTable.find("> tbody > tr.valueField > td.fieldPath").each(function()
 		{
-			var oFieldParts = oFields[f].split(".");
+			var sField = editorJQuery(this).text();
+			var oFieldParts = sField.split(".");
 			//WORK OUR WAY THROUGH THE FIELD RELATIONSHIPS ON THE RESULT RECORD
 			var oCurrentRecordPart = oRecord;
 			for (var p = 0; p < oFieldParts.length; p++)
 			{
 				oCurrentRecordPart = oCurrentRecordPart[oFieldParts[p]];
 			}
-			var $trField = oFormulaEditorSettings.FieldsTable.find("> tbody > tr#field" + f);
+			var $trField = editorJQuery(this).parent();
 			$trField.find("td.fieldValue").text(oCurrentRecordPart);
 			
 			/*
@@ -604,7 +619,7 @@ function LoadFieldValuesPreview(e)
 				$trField.next().find(".fieldValuesPreviewId:first").text(oCurrentParentRecordPart);
 			}
 			*/
-		}
+		});
 	});
 
 }
@@ -665,7 +680,7 @@ function GetFieldsFromFormula(sFormula)
 					Field: sField,
 					FieldParts: sField.split("."),
 					Quantity: 1,
-					ThisField: false
+					ResultField: false
 				});
 			}
 			else
