@@ -146,6 +146,8 @@ function FormulaEditAreaLoaded(sTextAreaId)
 	//SETUP FIELD DETAILS IF WE CAN IDENTIFY WHAT OBJECT WE ARE WORKING WITH
 	if (oFormulaEditorSettings.ObjectId != "" || oFormulaEditorSettings.ObjectAPIName != "")
 	{
+		ShowNewVersionMessage();
+		
 		var $fieldDetails = editorJQuery("<span class='formulaEditorFieldsLoadShell' style='float: left;'><input type='submit' class='btn formulaEditorFieldsLoad' value='Load Field Details' /><span class='formulaEditorTooltip' title='Loads details about the fields found in the formula.'>?</span></span><div class='formulaEditorFields' style='display: none;'><div class='fieldValuesPreviewShell' style='display: inline; text-align: right; float: right;'><input type='text' class='fieldValuesPreviewId' placeholder='Enter Record Id' /> <input type='button' class='fieldValuesPreviewButton btn' value='Load Record Values' /></div><table class='formulaEditorFieldsTable list'></table></div>");
 					
 		$loadButton = $fieldDetails.find("input.formulaEditorFieldsLoad");
@@ -200,6 +202,88 @@ function FormulaEditAreaLoaded(sTextAreaId)
 			});
 		}
 	}
+}
+
+//http://stackoverflow.com/questions/2399389/detect-chrome-extension-first-run-update
+function ShowNewVersionMessage()
+{
+	var bMessageSeen = localStorage['FormulaEditorFieldDetailsMessageSeen'];
+	if (typeof bMessageSeen == "undefined")
+	{
+		var $overlay = editorJQuery("<div id='formulaEditorMessageOverlay'></div>")
+		.css({
+			"background": "#000000",
+			"position": "fixed",
+			"top": "0",
+			"left": "0",
+			"width": "100%",
+			"height": "1000%",
+			"z-index": "99999",
+			"opacity": ".6"
+		}).appendTo("body");
+		
+		var $messageBox = editorJQuery("<div id='formulaEditorMessageBox'></div>")
+		.css({
+			"position": "fixed",
+			"top": "100px",
+			"background": "#FFFFFF",
+			"z-index": "99999",
+			"left": "50%",
+			"width": "500px",
+			"margin-left": "-250px", //half of width
+			"padding": "10px",
+			"border-radius": "5px"
+		}).appendTo("body");	
+		
+		var sBaseURL = editorJQuery("#ForceFormulaEditorBaseURL").val();
+		
+		$messageBox.append("<h1 style='font-size: 20px;'>Enhanced Formula Editor Updates</h1>");
+		$messageBox.append("<p style='margin: 5px 0 10px 0;'>There are some exciting updates to the enhanced formula editor!</p>");
+		$messageBox.append("<h2 style='font-size: 15px;'>Insert Field, Insert Operator, and Insert Function Buttons</h2>");
+		$messageBox.append("<p style='margin: 5px 0 10px 0;'>The \"Insert\" buttons now properly insert content into the editor.</p>");
+		$messageBox.append("<h2 style='font-size: 15px;'>\"Load Field Details\" Button</h2>");
+		$messageBox.append("<p style='margin: 5px 0 10px 0;'>There is a new button under the editor named \"Load Field Details\" that loads details about the fields found in the formula.  The field details included are:<p>");
+		var sList = "<ul style='list-style-type: disc;'>";
+		sList += "<li>Field type</li>";
+		sList += "<li>How many times it is used</li>";
+		sList += "<li>Formula field compile sizes</li>";
+		sList += "<li>Field edit links</li>";
+		sList += "<li>Field record values</li>";
+		sList += "<li>Field Sub Details";
+			sList += "<ul style='list-style-type: circle;'>";
+			sList += "<li>Object Name</li>";
+			sList += "<li>Field Label</li>";
+			sList += "<li>Field Help Text</li>";
+			sList += "<li>For picklist fields, their picklist values</li>";
+			sList += "<li>For formula fields, their formula</li>";
+			sList += "</ul>";
+		sList += "</li>";
+		sList += "</ul>";
+		$messageBox.append(sList);
+		$messageBox.append("<img src='" + sBaseURL + "FieldDetailsScreenshot.jpg' style='width: 100%; border: 1px solid #CCCCCC; margin-top: 10px;' />");
+		$messageBox.append("<a href='#' id='formulaEditorMessageBoxConfirm'>Got It!</a>");
+		
+		$messageBox.find("#formulaEditorMessageBoxConfirm")
+		.css({
+			"float": "right",
+			"border": "1px solid #000000",
+			"border-radius": "5px",
+			"padding": "5px 10px",
+			"text-decoration": "none",
+			"background": "#EEE",
+			"margin-top": "10px"
+		})
+		.click(function()
+		{
+			$overlay.hide();
+			$messageBox.hide();
+			
+			localStorage['FormulaEditorFieldDetailsMessageSeen'] = true;
+			
+			return false;
+		});
+	}
+	
 }
 
 function readCookie(name) {
@@ -275,24 +359,32 @@ function LoadFormulaFieldDetails(e)
 	
 	$table.find("tr.headerRow a.formulaFieldCompile").click(function()
 	{
-		$table.find("> tbody > tr.formulaField > td.fieldEdit").each(function()
-		{
-			var $tdCompileField = editorJQuery(this).parent().find("> td.fieldCompile");
-			$tdCompileField.text("Loading");
-			var sEditURL = editorJQuery(this).find("a").attr("href");
-			editorJQuery.get(sEditURL, function(data)
+		//make sure the Edit links have been loaded first
+		if ($table.find("> tbody > tr.formulaField > td.fieldEdit:empty").length == 0)
+		{			
+			$table.find("> tbody > tr.formulaField > td.fieldEdit").each(function()
 			{
-				var $form = editorJQuery(data).find("#editPage");
-				$form.find("input[type='submit'][name!='validateDefaultFormula']").remove();
-				editorJQuery.post(sEditURL, $form.serialize(), function(data)
+				var $tdCompileField = editorJQuery(this).parent().find("> td.fieldCompile");
+				$tdCompileField.text("Loading");
+				var sEditURL = editorJQuery(this).find("a").attr("href");
+				editorJQuery.get(sEditURL, function(data)
 				{
-					var sCompileSize = editorJQuery(data).find("#validationStatus").text();
-					sCompileSize = sCompileSize.replace("No syntax errors in merge fields or functions. (Compiled size: ", "");
-					sCompileSize = sCompileSize.replace(" characters)", "");
-					$tdCompileField.text(sCompileSize.trim());
+					var $form = editorJQuery(data).find("#editPage");
+					$form.find("input[type='submit'][name!='validateDefaultFormula']").remove();
+					editorJQuery.post(sEditURL, $form.serialize(), function(data)
+					{
+						var sCompileSize = editorJQuery(data).find("#validationStatus").text();
+						sCompileSize = sCompileSize.replace("No syntax errors in merge fields or functions. (Compiled size: ", "");
+						sCompileSize = sCompileSize.replace(" characters)", "");
+						$tdCompileField.text(sCompileSize.trim());
+					});
 				});
 			});
-		});
+		}
+		else
+		{
+			alert("Load the \"Edit\" links first by clicking the \"Edit\" header link.  Then click \"Compile\".");
+		}
 		
 		return false;
 	});
@@ -315,12 +407,12 @@ function LoadFormulaFieldDetails(e)
 				.find({ DeveloperName: sObjectName.replace("__c", "") })
 				.execute(function(err, records) {
 					if (err) { return console.error(err); }
-					console.log("fetched : " + records);
+					//console.log("fetched : " + records);
 					jsforceConnection.tooling.sobject('CustomField')
 					.find({ TableEnumOrId: records[0].Id, DeveloperName: oFieldDescribe.name.replace("__c", "") })
 					.execute(function(err, records) {
 						if (err) { return console.error(err); }
-						console.log("fetched : " + records[0]);
+						//console.log("fetched : " + records[0]);
 						$fieldTR.find("td.fieldEdit").append("<a href='/" + records[0].Id + "/e' target='_blank'>Edit</a>");
 					});
 				});
@@ -334,7 +426,7 @@ function LoadFormulaFieldDetails(e)
 					.find({ TableEnumOrId: sObjectName, DeveloperName: oFieldDescribe.name.replace("__c", "") })
 					.execute(function(err, records) {
 						if (err) { return console.error(err); }
-						console.log("fetched : " + records[0]);
+						//console.log("fetched : " + records[0]);
 						$fieldTR.find("td.fieldEdit").append("<a href='/" + records[0].Id + "/e' target='_blank'>Edit</a>");
 					});
 				}
@@ -375,11 +467,11 @@ function FindFieldDescribeRecursive($fieldTR, sObjectLookupFieldName, sObjectNam
 			//IF WE HAVE MORE RELATIONSHIPS TO WORK THROUGH
 			if (iFieldPartIndex != oFieldParts.length - 1)
 			{
-				console.log("requesting relationship fields: " + oFieldDescribe.referenceTo[0]);
+				//console.log("requesting relationship fields: " + oFieldDescribe.referenceTo[0]);
 				jsforceConnection.sobject(oFieldDescribe.referenceTo[0]).describe$(function(err, meta) {
 					if (err) { return console.error(err); }
 					iFieldPartIndex += 1;
-					console.log(meta);
+					//console.log(meta);
 					return FindFieldDescribeRecursive($fieldTR, oFieldDescribe.name, oFieldDescribe.referenceTo[0], iFieldIndex, oFieldParts, iFieldPartIndex, meta.fields);
 				});
 			}
@@ -398,7 +490,7 @@ function FindFieldDescribeRecursive($fieldTR, sObjectLookupFieldName, sObjectNam
 
 function UpdateFieldDetails($fieldTR, sObjectLookupFieldName, sObjectName, iFieldIndex, oFieldParts, oFieldDescribe)
 {
-	console.log(oFieldDescribe);
+	//console.log(oFieldDescribe);
 	$fieldTR.data("fieldDescribe", oFieldDescribe);
 	$fieldTR.data("objectName", sObjectName);
 	$fieldTR.data("objectLookupFieldName", sObjectLookupFieldName);
@@ -587,7 +679,7 @@ function LoadFieldValuesPreview(e)
 	jsforceConnection.query("SELECT " + oUniqueRequestFields.join(",") + " FROM " + oFormulaEditorSettings.ObjectAPIName + " WHERE Id = '" + sRecordId + "'", function(err, result) {
 		if (err) { return console.error(err); }
 		var oRecord = result.records[0];
-		console.log(oRecord);
+		//console.log(oRecord);
 		oFormulaEditorSettings.FieldsTable.find("> tbody > tr.valueField > td.fieldPath").each(function()
 		{
 			var sField = editorJQuery(this).text();

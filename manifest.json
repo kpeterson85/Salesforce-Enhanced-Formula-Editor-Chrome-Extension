@@ -25,7 +25,8 @@
 			"regexp.js",
 			"images/*",
 			"jsforce-core.min.js",
-			"jquery.min.js"
+			"jquery.min.js",
+			"FieldDetailsScreenshot.jpg"
 	 ],
    "description": "Enhances the formula editor textareas to have syntax highlighting, tabbing, parenthesis matching, and find and replace.",
    "name": "Salesforce.com Enhanced Formula Editor",
