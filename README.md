@@ -40,3 +40,16 @@ If the extension can identify what object the formula is on then it will provide
 - To query the the Metadata API for the field type and sub detail information. 
 - To query the Tooling API for field ids to load the Edit links directly to the fields.
 - To query the REST API for SOQL queries to return field values for a record.
+ 
+## Getting the Extension
+### To install released version
+
+Install from the [chrome web store](https://chrome.google.com/webstore/detail/salesforcecom-enhanced-fo/cnlnnpnjccjcmecojdhgpknalcahkhio)
+
+This version will automatically update and is the preferred way to install unless you plan to make modifications to the source.
+
+### To install from source
+
+1. Download to a folder
+2. Go to chrome://extensions
+3. Check developer mode, then load unpacked extension
