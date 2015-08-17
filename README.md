@@ -28,15 +28,15 @@ Field Details Feature Includes:
 
 Formula fields found in the formula will load the enhanced editor for their own formulas, even providing the Load Field Details for themselves, which allows you to drill down through all formulas used in the parent formula.
 
-# Video
+## Overview Video
 
-[![Summary Video](http://img.youtube.com/vi/TW6NCtO67I8/0.jpg)](http://www.youtube.com/watch?v=TW6NCtO67I8)
+[![Video](http://img.youtube.com/vi/TW6NCtO67I8/0.jpg)](http://www.youtube.com/watch?v=TW6NCtO67I8)
 
 ## How it Works
 
 The extension looks for textareas with certain "id" attributes to identify formula input boxes.  If one is found then it loads the Edit Area code editor using a custom language definition file for the Salesforce formula language.
 
-If the extension can identify what object the formula is on then it will provide the "Load Field Details" button.  The "Load Field Details" button parses out the fields and lists them on the page.  The ![jsforce](https://github.com/jsforce/jsforce) library is for the following features:
+If the extension can identify what object the formula is on then it will provide the "Load Field Details" button.  The "Load Field Details" button parses out the fields and lists them on the page.  The [jsforce](https://github.com/jsforce/jsforce) library is used to piggy back off the current user's session id for loading the features below:
 - To query the the Metadata API for the field type and sub detail information. 
 - To query the Tooling API for field ids to load the Edit links directly to the fields.
 - To query the REST API for SOQL queries to return field values for a record.
