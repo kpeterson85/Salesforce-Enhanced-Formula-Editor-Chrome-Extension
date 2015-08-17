@@ -10,7 +10,7 @@ Editor Feature Includes:
 - No code wrapping
 - Resize editor window by clicking bottom right corner
 - Full screen feature
- 
+
 A new button is created named "Load Field Details" that loads details about the fields found in the formula.
 
 Field Details Feature Includes:
@@ -26,6 +26,17 @@ Field Details Feature Includes:
   - For picklist fields, their picklist values
   - For formula fields, their formula
 
-![Formula Editor](FieldDetailsScreenshot.JPG)
-
 Formula fields found in the formula will load the enhanced editor for their own formulas, even providing the Load Field Details for themselves, which allows you to drill down through all formulas used in the parent formula.
+
+# Video
+
+[![Summary Video](http://img.youtube.com/vi/TW6NCtO67I8/0.jpg)](http://www.youtube.com/watch?v=TW6NCtO67I8)
+
+## How it Works
+
+The extension looks for textareas with certain "id" attributes to identify formula input boxes.  If one is found then it loads the Edit Area code editor using a custom language definition file for the Salesforce formula language.
+
+If the extension can identify what object the formula is on then it will provide the "Load Field Details" button.  The "Load Field Details" button parses out the fields and lists them on the page.  The ![jsforce](https://github.com/jsforce/jsforce) library is for the following features:
+- To query the the Metadata API for the field type and sub detail information. 
+- To query the Tooling API for field ids to load the Edit links directly to the fields.
+- To query the REST API for SOQL queries to return field values for a record.
