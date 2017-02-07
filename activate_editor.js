@@ -146,7 +146,7 @@ function FormulaEditAreaLoaded(sTextAreaId)
 	//SETUP FIELD DETAILS IF WE CAN IDENTIFY WHAT OBJECT WE ARE WORKING WITH
 	if (oFormulaEditorSettings.ObjectId != "" || oFormulaEditorSettings.ObjectAPIName != "")
 	{
-		ShowNewVersionMessage();
+		//ShowNewVersionMessage();
 		
 		var $fieldDetails = editorJQuery("<span class='formulaEditorFieldsLoadShell' style='float: left;'><input type='submit' class='btn formulaEditorFieldsLoad' value='Load Field Details' /><span class='formulaEditorTooltip' title='Loads details about the fields found in the formula.'>?</span></span><div class='formulaEditorFields' style='display: none;'><div class='fieldValuesPreviewShell' style='display: inline; text-align: right; float: right;'><input type='text' class='fieldValuesPreviewId' placeholder='Enter Record Id' /> <input type='button' class='fieldValuesPreviewButton btn' value='Load Record Values' /></div><table class='formulaEditorFieldsTable list'></table></div>");
 					
@@ -739,10 +739,10 @@ function GetFieldsFromFormula(sFormula)
 	sFormula = sFormula.replace(/(\btrue\b|\bfalse\b|\bnull\b|\b[0-9]+\b)/ig, " ");
 	
 	//FUNCTIONS
-	sFormula = sFormula.replace(/(\bBEGINS\b|\bBLANKVALUE\b|\bBR\b|\bCEILING\b|\bCONTAINS\b|\bDATE\b|\bDATEVALUE\b|\bDAY\b|\bEXP\b|\bFIND\b|\bFLOOR\b|\bGETSESSIONID\b|\bHYPERLINK\b|\bIMAGE\b|\bINCLUDES\b|\bISBLANK\b|\bISCHANGED\b|\bISNEW\b|\bISNULL\b|\bISNUMBER\b|\bISPICKVAL\b|\bLEFT\b|\bLEN\b|\bLN\b|\bLOG\b|\bLOWER\b|\bLPAD\b|\bMAX\b|\bMID\b|\bMIN\b|\bMOD\b|\bMONTH\b|\bNOT\b|\bNOW\b|\bNULLVALUE\b|\bPRIORVALUE\b|\bREGEX\b|\bRIGHT\b|\bROUND\b|\bRPAD\b|\bSQRT\b|\bSUBSTITUTE\b|\bTEXT\b|\bTODAY\b|\bTRIM\b|\bUPPER\b|\bVALUE\b|\bYEAR\b)/ig, " ");
+	sFormula = sFormula.replace(/(\bABS\b|\bBEGINS\b|\bBLANKVALUE\b|\bBR\b|\bCASESAFEID\b|\bCEILING\b|\bCONTAINS\b|\bDATE\b|\bDATEVALUE\b|\bDAY\b|\bDISTANCE\b|\bEXP\b|\bFIND\b|\bFLOOR\b|\bGEOLOCATION\b|\bGETSESSIONID\b|\bHYPERLINK\b|\bIMAGE\b|\bINCLUDES\b|\bISBLANK\b|\bISCHANGED\b|\bISNEW\b|\bISNULL\b|\bISNUMBER\b|\bISPICKVAL\b|\bLEFT\b|\bLEN\b|\bLN\b|\bLOG\b|\bLOWER\b|\bLPAD\b|\bMAX\b|\bMID\b|\bMIN\b|\bMOD\b|\bMONTH\b|\bNOT\b|\bNOW\b|\bNULLVALUE\b|\bPRIORVALUE\b|\bREGEX\b|\bRIGHT\b|\bROUND\b|\bRPAD\b|\bSQRT\b|\bSUBSTITUTE\b|\bTEXT\b|\bTODAY\b|\bTRIM\b|\bUPPER\b|\bVALUE\b|\bVLOOKUP\b|\bYEAR\b)/ig, " ");
 	
 	//BOOLEAN
-	sFormula = sFormula.replace(/(\bAND\b|\bCASE\b|\bIF\b|\bOR\b)/ig, " ");
+	sFormula = sFormula.replace(/(\bAND\b|\bCASE\b|\bIF\b|\bOR\b|\&\&|\|\|)/ig, " ");
 	
 	//REMOVE NEWLINES AND MULTIPLE SPACES
 	sFormula = sFormula.replace(/\s+/ig, " ");
