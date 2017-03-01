@@ -26,6 +26,7 @@ var oFormulaEditorSettings = {
 	TextAreaEditorHeight: 400,
 	TextAreaEditorDisplay: "onload",	
 	TextAreaEditorEditable: true,
+	TextAreaEditorResizedCallback: "FormulaEditAreaResized",
 	OverrideInsertButtons: true,
 	LoadFieldDetailsAfterSelector: ".formulaFooter"
 }
@@ -72,6 +73,7 @@ function ActivateEditor(oFormulaEditorSettings)
 		TextAreaEditorHeight: 400,
 		TextAreaEditorDisplay: "onload",
 		TextAreaEditorEditable: true,
+		TextAreaEditorResizedCallback: "",
 		ObjectId: "",
 		ObjectAPIName: "",
 		ObjectLabel: "",
@@ -104,6 +106,7 @@ function ActivateEditor(oFormulaEditorSettings)
 		,min_width: 600
 		,show_line_colors: true
 		,EA_load_callback: "FormulaEditAreaLoaded"
+		,EA_resized_callback: oFormulaEditorSettings.TextAreaEditorResizedCallback
 		,display: oFormulaEditorSettings.TextAreaEditorDisplay
 		,is_editable: oFormulaEditorSettings.TextAreaEditorEditable
 	});
@@ -202,6 +205,11 @@ function FormulaEditAreaLoaded(sTextAreaId)
 			});
 		}
 	}
+}
+
+function FormulaEditAreaResized(sTextAreaId)
+{
+	alert("resized " + sTextAreaId);
 }
 
 //http://stackoverflow.com/questions/2399389/detect-chrome-extension-first-run-update

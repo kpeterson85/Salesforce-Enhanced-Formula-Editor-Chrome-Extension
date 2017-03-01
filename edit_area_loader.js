@@ -1040,6 +1040,10 @@ EditAreaLoader.prototype ={
 				if(editAreas[id]['settings']["submit_callback"].length>0)
 					eval(editAreas[id]['settings']["submit_callback"]+"('"+ id +"');");
 				break;
+			case "EA_resized":
+				if(editAreas[id]['settings']["EA_resized_callback"].length>0)
+					eval(editAreas[id]['settings']["EA_resized_callback"]+"('"+ id +"');");
+				break;
 		}
         if(window.frames["frame_"+id] && window.frames["frame_"+ id].editArea){
 			if(fct_param!=undefined)
