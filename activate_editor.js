@@ -23,11 +23,22 @@ else if (document.getElementById("ValidationFormula") != null)
 
 var oFormulaEditorSettings = {
 	TextAreaId: sId,
-	TextAreaEditorHeight: 400,
+	TextAreaEditorStartHeight: 400,
+	TextAreaEditorStartWidth: 600,
 	TextAreaEditorDisplay: "onload",	
 	TextAreaEditorEditable: true,
+	TextAreaEditorResizedCallback: "FormulaEditAreaResized",
 	OverrideInsertButtons: true,
 	LoadFieldDetailsAfterSelector: ".formulaFooter"
+}
+
+if (typeof(localStorage['FormulaEditorHeight']) != "undefined")
+{
+	oFormulaEditorSettings.TextAreaEditorStartHeight = parseInt(localStorage['FormulaEditorHeight'], 10);
+}
+if (typeof(localStorage['FormulaEditorWidth']) != "undefined")
+{
+	oFormulaEditorSettings.TextAreaEditorStartWidth = parseInt(localStorage['FormulaEditorWidth'], 10);
 }
 
 //custom objects have their object id in the entity field, standard objects have their object name
@@ -69,9 +80,13 @@ function ActivateEditor(oFormulaEditorSettings)
 {
 	var oDefaultSettings = {
 		TextAreaId: "",
-		TextAreaEditorHeight: 400,
+		TextAreaEditorStartHeight: 400,
+		TextAreaEditorMinHeight: 250,
+		TextAreaEditorStartWidth: 600,
+		TextAreaEditorMinWidth: 500,
 		TextAreaEditorDisplay: "onload",
 		TextAreaEditorEditable: true,
+		TextAreaEditorResizedCallback: "",
 		ObjectId: "",
 		ObjectAPIName: "",
 		ObjectLabel: "",
@@ -88,6 +103,8 @@ function ActivateEditor(oFormulaEditorSettings)
 	
 	editorJQuery("#" + oFormulaEditorSettings.TextAreaId).data("formulaEditorSettings", oFormulaEditorSettings);
 	editorJQuery("#" + oFormulaEditorSettings.TextAreaId).data("originalFormula", editorJQuery("#" + oFormulaEditorSettings.TextAreaId).val());
+	editorJQuery("#" + oFormulaEditorSettings.TextAreaId).width(oFormulaEditorSettings.TextAreaEditorStartWidth);
+	editorJQuery("#" + oFormulaEditorSettings.TextAreaId).height(oFormulaEditorSettings.TextAreaEditorStartHeight);
 	
 	editAreaLoader.init({
 		id: oFormulaEditorSettings.TextAreaId	// id of the textarea to transform		
@@ -100,10 +117,11 @@ function ActivateEditor(oFormulaEditorSettings)
 		,replace_tab_by_spaces: 2
 		,font_size: "8"
 		,font_family: "verdana, monospace"
-		,min_height: oFormulaEditorSettings.TextAreaEditorHeight
-		,min_width: 600
+		,min_height: oFormulaEditorSettings.TextAreaEditorMinHeight
+		,min_width: oFormulaEditorSettings.TextAreaEditorMinWidth		
 		,show_line_colors: true
 		,EA_load_callback: "FormulaEditAreaLoaded"
+		,EA_resized_callback: oFormulaEditorSettings.TextAreaEditorResizedCallback
 		,display: oFormulaEditorSettings.TextAreaEditorDisplay
 		,is_editable: oFormulaEditorSettings.TextAreaEditorEditable
 	});
@@ -202,6 +220,12 @@ function FormulaEditAreaLoaded(sTextAreaId)
 			});
 		}
 	}
+}
+
+function FormulaEditAreaResized(sTextAreaId)
+{
+	localStorage['FormulaEditorHeight'] = editorJQuery("#" + sTextAreaId).height();
+	localStorage['FormulaEditorWidth'] = editorJQuery("#" + sTextAreaId).width();
 }
 
 //http://stackoverflow.com/questions/2399389/detect-chrome-extension-first-run-update
@@ -538,7 +562,8 @@ function UpdateFieldDetails($fieldTR, sObjectLookupFieldName, sObjectName, iFiel
 		
 		var oSubFormulaEditorSettings = {
 			TextAreaId: sTextAreaId,
-			TextAreaEditorHeight: 250,
+			TextAreaEditorStartHeight: 250,
+			TextAreaEditorStartWidth: 600,
 			TextAreaEditorDisplay: "later",
 			TextAreaEditorEditable: true,
 			ObjectId: "",
@@ -739,10 +764,10 @@ function GetFieldsFromFormula(sFormula)
 	sFormula = sFormula.replace(/(\btrue\b|\bfalse\b|\bnull\b|\b[0-9]+\b)/ig, " ");
 	
 	//FUNCTIONS
-	sFormula = sFormula.replace(/(\bABS\b|\bBEGINS\b|\bBLANKVALUE\b|\bBR\b|\bCASESAFEID\b|\bCEILING\b|\bCONTAINS\b|\bDATE\b|\bDATEVALUE\b|\bDAY\b|\bDISTANCE\b|\bEXP\b|\bFIND\b|\bFLOOR\b|\bGEOLOCATION\b|\bGETSESSIONID\b|\bHYPERLINK\b|\bIMAGE\b|\bINCLUDES\b|\bISBLANK\b|\bISCHANGED\b|\bISNEW\b|\bISNULL\b|\bISNUMBER\b|\bISPICKVAL\b|\bLEFT\b|\bLEN\b|\bLN\b|\bLOG\b|\bLOWER\b|\bLPAD\b|\bMAX\b|\bMID\b|\bMIN\b|\bMOD\b|\bMONTH\b|\bNOT\b|\bNOW\b|\bNULLVALUE\b|\bPRIORVALUE\b|\bREGEX\b|\bRIGHT\b|\bROUND\b|\bRPAD\b|\bSQRT\b|\bSUBSTITUTE\b|\bTEXT\b|\bTODAY\b|\bTRIM\b|\bUPPER\b|\bVALUE\b|\bVLOOKUP\b|\bYEAR\b)/ig, " ");
+	sFormula = sFormula.replace(/(\bABS\b|\bBEGINS\b|\bBLANKVALUE\b|\bBR\b|\bCASESAFEID\b|\bCEILING\b|\bCONTAINS\b|\bDATE\b|\bDATETIMEVALUE\b|\bDATEVALUE\b|\bDAY\b|\bDISTANCE\b|\bEXP\b|\bFIND\b|\bFLOOR\b|\bGEOLOCATION\b|\bGETSESSIONID\b|\bHYPERLINK\b|\bIMAGE\b|\bINCLUDES\b|\bISBLANK\b|\bISCHANGED\b|\bISNEW\b|\bISNULL\b|\bISNUMBER\b|\bISPICKVAL\b|\bLEFT\b|\bLEN\b|\bLN\b|\bLOG\b|\bLOWER\b|\bLPAD\b|\bMAX\b|\bMID\b|\bMIN\b|\bMOD\b|\bMONTH\b|\bNOT\b|\bNOW\b|\bNULLVALUE\b|\bPRIORVALUE\b|\bREGEX\b|\bRIGHT\b|\bROUND\b|\bRPAD\b|\bSQRT\b|\bSUBSTITUTE\b|\bTEXT\b|\bTODAY\b|\bTRIM\b|\bUPPER\b|\bVALUE\b|\bVLOOKUP\b|\bYEAR\b)/ig, " ");
 	
 	//BOOLEAN
-	sFormula = sFormula.replace(/(\bAND\b|\bCASE\b|\bIF\b|\bOR\b|\&\&|\|\|)/ig, " ");
+	sFormula = sFormula.replace(/(\bAND\b|\bCASE\b|\bIF\b|\bOR\b|\&|\|)/ig, " ");
 	
 	//REMOVE NEWLINES AND MULTIPLE SPACES
 	sFormula = sFormula.replace(/\s+/ig, " ");

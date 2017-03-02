@@ -50,6 +50,8 @@
 		a.selectionEnd		= editAreaLoader.resize["selectionEnd"];
 		editAreaLoader.toggle(editAreaLoader.resize["id"]);
 		
+		editAreaLoader.execCommand(editAreaLoader.resize["id"], "EA_resized");
+		
 		return false;
 	};
 	

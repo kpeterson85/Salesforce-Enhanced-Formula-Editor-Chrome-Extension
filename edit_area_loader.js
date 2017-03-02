@@ -43,7 +43,9 @@ function EditAreaLoader(){
 		,allow_resize: "both"	// possible values: "no", "both", "x", "y"
 		,show_line_colors: false	// if the highlight is disabled for the line currently beeing edited (if enabled => heavy CPU use)
 		,min_width: 400
+		,start_width: 400
 		,min_height: 125
+		,start_height: 125
 		,replace_tab_by_spaces: false
 		,allow_toggle: true		// true or false
 		,language: "en"
@@ -1039,6 +1041,10 @@ EditAreaLoader.prototype ={
 			case "EA_submit":
 				if(editAreas[id]['settings']["submit_callback"].length>0)
 					eval(editAreas[id]['settings']["submit_callback"]+"('"+ id +"');");
+				break;
+			case "EA_resized":
+				if(editAreas[id]['settings']["EA_resized_callback"].length>0)
+					eval(editAreas[id]['settings']["EA_resized_callback"]+"('"+ id +"');");
 				break;
 		}
         if(window.frames["frame_"+id] && window.frames["frame_"+ id].editArea){
