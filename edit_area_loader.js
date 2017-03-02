@@ -43,7 +43,9 @@ function EditAreaLoader(){
 		,allow_resize: "both"	// possible values: "no", "both", "x", "y"
 		,show_line_colors: false	// if the highlight is disabled for the line currently beeing edited (if enabled => heavy CPU use)
 		,min_width: 400
+		,start_width: 400
 		,min_height: 125
+		,start_height: 125
 		,replace_tab_by_spaces: false
 		,allow_toggle: true		// true or false
 		,language: "en"
