@@ -713,6 +713,9 @@ function LoadFieldValuesPreview(e)
 			var oCurrentRecordPart = oRecord;
 			for (var p = 0; p < oFieldParts.length; p++)
 			{
+				if (!oCurrentRecordPart) {
+					break;
+				}
 				oCurrentRecordPart = oCurrentRecordPart[oFieldParts[p]];
 			}
 			var $trField = editorJQuery(this).parent();
