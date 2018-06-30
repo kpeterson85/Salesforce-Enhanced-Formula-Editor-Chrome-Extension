@@ -21,45 +21,65 @@ else if (document.getElementById("ValidationFormula") != null)
 	sObjectElementId = "TableEnumOrId";
 }
 
-var oFormulaEditorSettings = {
-	TextAreaId: sId,
-	TextAreaEditorStartHeight: 400,
-	TextAreaEditorStartWidth: 600,
-	TextAreaEditorDisplay: "onload",	
-	TextAreaEditorEditable: true,
-	TextAreaEditorResizedCallback: "FormulaEditAreaResized",
-	OverrideInsertButtons: true,
-	LoadFieldDetailsAfterSelector: ".formulaFooter"
-}
-
-if (typeof(localStorage['FormulaEditorHeight']) != "undefined")
+var elements = editorJQuery('#' + sId);
+if (elements.length == 1)
 {
-	oFormulaEditorSettings.TextAreaEditorStartHeight = parseInt(localStorage['FormulaEditorHeight'], 10);
-}
-if (typeof(localStorage['FormulaEditorWidth']) != "undefined")
-{
-	oFormulaEditorSettings.TextAreaEditorStartWidth = parseInt(localStorage['FormulaEditorWidth'], 10);
-}
-
-//custom objects have their object id in the entity field, standard objects have their object name
-var $objectIdField = editorJQuery("#" + sObjectElementId);
-if ($objectIdField.length == 1)
-{
-	if ($objectIdField.val().charAt(0) == "0")
+	var observer = new IntersectionObserver(function(entries)
 	{
-		oFormulaEditorSettings.ObjectId = $objectIdField.val();
-	}
-	else
+		//only activate the editor when the textfield becomes visible the first time indicated by lack of data attached yet
+		if (entries[0].intersectionRatio && typeof(editorJQuery("#" + sId).data("formulaEditorSettings")) == "undefined")
+		{
+			//don't observe anymore
+			observer.unobserve(entries[0].target);
+		  
+			var oFormulaEditorSettings = {
+				TextAreaId: sId,
+				TextAreaEditorStartHeight: 400,
+				TextAreaEditorStartWidth: 600,
+				TextAreaEditorDisplay: "onload",	
+				TextAreaEditorEditable: true,
+				TextAreaEditorResizedCallback: "FormulaEditAreaResized",
+				OverrideInsertButtons: true,
+				LoadFieldDetailsAfterSelector: ".formulaFooter"
+			}
+
+			if (typeof(localStorage['FormulaEditorHeight']) != "undefined")
+			{
+				oFormulaEditorSettings.TextAreaEditorStartHeight = parseInt(localStorage['FormulaEditorHeight'], 10);
+			}
+			if (typeof(localStorage['FormulaEditorWidth']) != "undefined")
+			{
+				oFormulaEditorSettings.TextAreaEditorStartWidth = parseInt(localStorage['FormulaEditorWidth'], 10);
+			}
+
+			//custom objects have their object id in the entity field, standard objects have their object name
+			var $objectIdField = editorJQuery("#" + sObjectElementId);
+			if ($objectIdField.length == 1)
+			{
+				if ($objectIdField.val().charAt(0) == "0")
+				{
+					oFormulaEditorSettings.ObjectId = $objectIdField.val();
+				}
+				else
+				{
+					oFormulaEditorSettings.ObjectAPIName = $objectIdField.val();
+				}
+			}
+				
+			//CONNECT TO SALESFORCE
+			window.jsforceConnection = new jsforce.Connection({
+				serverUrl : "https://" + document.location.host,
+				sessionId : readCookie("sid")
+			});
+
+			ActivateEditor(oFormulaEditorSettings);
+		}
+	},
 	{
-		oFormulaEditorSettings.ObjectAPIName = $objectIdField.val();
-	}
+		root: document.body
+	});
+	observer.observe(elements[0]);
 }
-	
-//CONNECT TO SALESFORCE
-window.jsforceConnection = new jsforce.Connection({
-	serverUrl : "https://" + document.location.host,
-	sessionId : readCookie("sid")
-});	
 
 var oEditorTooltipStyles = {
 	"background-color": "#CCCCCC",
@@ -73,8 +93,6 @@ var oEditorTooltipStyles = {
 	"font-size": "10px",
 	"font-weight": "normal"
 };
-
-ActivateEditor(oFormulaEditorSettings);
 
 function ActivateEditor(oFormulaEditorSettings)
 {
