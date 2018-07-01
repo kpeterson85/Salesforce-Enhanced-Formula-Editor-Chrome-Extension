@@ -782,7 +782,7 @@ function GetFieldsFromFormula(sFormula)
 	sFormula = sFormula.replace(/(\btrue\b|\bfalse\b|\bnull\b|\b[0-9]+\b)/ig, " ");
 	
 	//FUNCTIONS
-	sFormula = sFormula.replace(/(\bABS\b|\bBEGINS\b|\bBLANKVALUE\b|\bBR\b|\bCASESAFEID\b|\bCEILING\b|\bCONTAINS\b|\bDATE\b|\bDATETIMEVALUE\b|\bDATEVALUE\b|\bDAY\b|\bDISTANCE\b|\bEXP\b|\bFIND\b|\bFLOOR\b|\bGEOLOCATION\b|\bGETSESSIONID\b|\bHYPERLINK\b|\bIMAGE\b|\bINCLUDES\b|\bISBLANK\b|\bISCHANGED\b|\bISNEW\b|\bISNULL\b|\bISNUMBER\b|\bISPICKVAL\b|\bLEFT\b|\bLEN\b|\bLN\b|\bLOG\b|\bLOWER\b|\bLPAD\b|\bMAX\b|\bMID\b|\bMIN\b|\bMOD\b|\bMONTH\b|\bNOT\b|\bNOW\b|\bNULLVALUE\b|\bPRIORVALUE\b|\bREGEX\b|\bRIGHT\b|\bROUND\b|\bRPAD\b|\bSQRT\b|\bSUBSTITUTE\b|\bTEXT\b|\bTODAY\b|\bTRIM\b|\bUPPER\b|\bVALUE\b|\bVLOOKUP\b|\bYEAR\b)/ig, " ");
+	sFormula = sFormula.replace(/(\bABS\b|\bADDMONTHS\b|\bBEGINS\b|\bBLANKVALUE\b|\bBR\b|\bCASESAFEID\b|\bCEILING\b|\bCONTAINS\b|\bCURRENCYRATE\b|\bDATE\b|\bDATETIMEVALUE\b|\bDATEVALUE\b|\bDAY\b|\bDISTANCE\b|\bEXP\b|\bFIND\b|\bFLOOR\b|\bGEOLOCATION\b|\bGETSESSIONID\b|\bHOUR\b|\bHYPERLINK\b|\bIMAGE\b|\bINCLUDES\b|\bISBLANK\b|\bISCHANGED\b|\bISCLONE\b|\bISNEW\b|\bISNULL\b|\bISNUMBER\b|\bISPICKVAL\b|\bLEFT\b|\bLEN\b|\bLN\b|\bLOG\b|\bLOWER\b|\bLPAD\b|\bMAX\b|\bMCEILING\b|\bMFLOOR\b|\bMID\b|\bMILLISECOND\b|\bMIN\b|\bMINUTE\b|\bMOD\b|\bMONTH\b|\bNOT\b|\bNOW\b|\bNULLVALUE\b|\bPRIORVALUE\b|\bREGEX\b|\bRIGHT\b|\bROUND\b|\bRPAD\b|\bSQRT\b|\bSECOND\b|\bSUBSTITUTE\b|\bTEXT\b|\bTIMENOW\b|\bTIMEVALUE\b|\bTODAY\b|\bTRIM\b|\bUPPER\b|\bVALUE\b|\bVLOOKUP\b|\bWEEKDAY\b|\bYEAR\b)/ig, " ");
 	
 	//BOOLEAN
 	sFormula = sFormula.replace(/(\bAND\b|\bCASE\b|\bIF\b|\bOR\b|\&|\|)/ig, " ");
