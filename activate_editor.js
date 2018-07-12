@@ -39,6 +39,7 @@ if (elements.length == 1)
 				TextAreaEditorDisplay: "onload",	
 				TextAreaEditorEditable: true,
 				TextAreaEditorResizedCallback: "FormulaEditAreaResized",
+				TextAreaEditorFontSizeChangedCallback: "FormulaEditAreaFontSizeChanged",
 				OverrideInsertButtons: true,
 				LoadFieldDetailsAfterSelector: ".formulaFooter"
 			}
@@ -105,6 +106,7 @@ function ActivateEditor(oFormulaEditorSettings)
 		TextAreaEditorDisplay: "onload",
 		TextAreaEditorEditable: true,
 		TextAreaEditorResizedCallback: "",
+		TextAreaEditorFontSizeChangedCallback: "",
 		ObjectId: "",
 		ObjectAPIName: "",
 		ObjectLabel: "",
@@ -124,6 +126,12 @@ function ActivateEditor(oFormulaEditorSettings)
 	editorJQuery("#" + oFormulaEditorSettings.TextAreaId).width(oFormulaEditorSettings.TextAreaEditorStartWidth);
 	editorJQuery("#" + oFormulaEditorSettings.TextAreaId).height(oFormulaEditorSettings.TextAreaEditorStartHeight);
 	
+	var sFontSize = "8";
+	if (typeof(localStorage['FormulaEditorFontSize']) != "undefined")
+	{
+		sFontSize = localStorage['FormulaEditorFontSize'];
+	}
+	
 	editAreaLoader.init({
 		id: oFormulaEditorSettings.TextAreaId	// id of the textarea to transform		
 		,start_highlight: true	// if start with highlight
@@ -133,13 +141,14 @@ function ActivateEditor(oFormulaEditorSettings)
 		,language: "en"
 		,syntax: "forceformula"
 		,replace_tab_by_spaces: 2
-		,font_size: "8"
+		,font_size: sFontSize
 		,font_family: "verdana, monospace"
 		,min_height: oFormulaEditorSettings.TextAreaEditorMinHeight
 		,min_width: oFormulaEditorSettings.TextAreaEditorMinWidth		
 		,show_line_colors: true
 		,EA_load_callback: "FormulaEditAreaLoaded"
 		,EA_resized_callback: oFormulaEditorSettings.TextAreaEditorResizedCallback
+		,EA_font_size_changed_callback: oFormulaEditorSettings.TextAreaEditorFontSizeChangedCallback
 		,display: oFormulaEditorSettings.TextAreaEditorDisplay
 		,is_editable: oFormulaEditorSettings.TextAreaEditorEditable
 	});
@@ -244,6 +253,11 @@ function FormulaEditAreaResized(sTextAreaId)
 {
 	localStorage['FormulaEditorHeight'] = editorJQuery("#" + sTextAreaId).height();
 	localStorage['FormulaEditorWidth'] = editorJQuery("#" + sTextAreaId).width();
+}
+
+function FormulaEditAreaFontSizeChanged(sFontSize)
+{
+	localStorage['FormulaEditorFontSize'] = sFontSize;
 }
 
 //http://stackoverflow.com/questions/2399389/detect-chrome-extension-first-run-update
