@@ -1045,7 +1045,7 @@ EditAreaLoader.prototype ={
 			case "EA_resized":
 				if(editAreas[id]['settings']["EA_resized_callback"].length>0)
 					eval(editAreas[id]['settings']["EA_resized_callback"]+"('"+ id +"');");
-				break;
+				break;			
 		}
         if(window.frames["frame_"+id] && window.frames["frame_"+ id].editArea){
 			if(fct_param!=undefined)

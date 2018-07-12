@@ -149,6 +149,8 @@
 		this.focus();
 		this.update_size();
 		this.check_line_selection();
+		
+		this.execCommand("EA_font_size_changed", s["font_size"]);
 	};
 	
 	EditArea.prototype.change_font_size= function(){

@@ -450,6 +450,10 @@
 			case "file_close":
 				if(this.settings["EA_file_close_callback"].length>0)
 					return eval("parent."+this.settings["EA_file_close_callback"]+"(param);");
+				break;			
+			case "EA_font_size_changed":
+				if(this.settings["EA_font_size_changed_callback"].length>0)
+					return eval("parent."+this.settings["EA_font_size_changed_callback"]+"(param);");
 				break;
 			
 			default:
