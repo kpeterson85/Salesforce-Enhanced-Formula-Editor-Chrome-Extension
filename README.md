@@ -5,7 +5,7 @@ The Salesforce Enhanced Formula Editor chrome extension enhances the formula tex
 Editor Feature Includes:
 - Syntax highlighting
 - Tabbing (tab and shift-tab)
-- Parenthesis matching
+- Parentheses matching
 - Find and Replace
 - No code wrapping
 - Resize editor window by clicking bottom right corner
