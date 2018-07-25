@@ -4,32 +4,81 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>{{ page.title }}</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.2/css/bootstrap.min.css" integrity="sha384-Smlep5jCw/wG7hdkwQ/Z5nLIefveQRIY9nfy6xoR1uRYBtpZgI6339F5dgvm/e9B" crossorigin="anonymous">
+  <style>
+    a.nav-link.active { background-color: #0069d9 !important; }
+    a.nav-link:hover { background-color: #0069d9 !important; }
+  </style>
   </head>
-		<body>
-			<nav>
-				<ul class="nav nav-pills justify-content-center">
-					<li class="nav-item">
-						<a class="nav-link" href="#">Home</a>
-					</li>
-					<li class="nav-item">
-						<a class="nav-link" href="#">Editor</a>
-					</li>
-					<li class="nav-item">
-						<a class="nav-link" href="#">Field Details</a>
-					</li>
-				</ul>
+		<body class="pt-5">
+			<nav class="navbar navbar-expand-md bg-primary navbar-dark fixed-top pt-2 pb-2">
+        <a class="navbar-brand" href="#">Formula Editor</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+          <ul class="nav nav-pills justify-content-center mr-auto flex-column flex-sm-row">
+            <li class="nav-item">
+              <a class="nav-link text-white" href="index.html">Home</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link text-white" href="install.html">Install</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link text-white" href="editor.html">Editor</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link text-white" href="field_details.html">Field Details</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link text-white" href="smart_formatter.html">Smart Formatter</a>
+            </li>
+          </ul>        
+          <ul class="justify-content-center nav nav-pills">
+            <li class="nav-item">
+              <a class="nav-link text-white" href="https://github.com/kpeterson85/Salesforce-Enhanced-Formula-Editor-Chrome-Extension" title="GitHub Link"><span class="sr-only">GitHub</span><i class="fab fa-github fa-2x"></i></a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link text-white" href="#" title="Twitter Link"><span class="sr-only">Twitter</span><i class="fab fa-twitter fa-2x"></i></a>
+            </li>
+          </ul>
+        </div>
 			</nav>
+
+      <div class="container mt-5">
+				{{ content }}
+      </div>
       
-			<div class="container">			
-				{{ content }}			
-			</div><!-- /.container -->
-      
-			<footer>
-	    		<ul>
-	        		<li><a href="mailto:test@test.com">email</a></li>
-	        		<li><a href="https://github.com">github.com</a></li>
-				</ul>
+			<footer class="container-fluid bg-primary text-white p-4 mt-5">
+        <div class="row justify-content-center">
+          <div class="col-3">
+            By: Kyle Peterson
+          </div>
+          <div class="col-3">
+            
+          </div>
+          <div class="col-3">
+            
+          </div>
+        </div>        
 			</footer>
       
-		</body>
+      <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.1.1/css/all.css" integrity="sha384-O8whS3fhG2OnA5Kas0Y9l3cfpmYjapjI0E4theH4iuMD+pLhbf6JI0jIMfYcK3yZ" crossorigin="anonymous">
+      <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+      <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.2/js/bootstrap.min.js" integrity="sha384-o+RDsa0aLu++PJvFqy8fFScvbHFLtbvScb8AjopnFD+iEQ7wo/CG0xlczd+2O/em" crossorigin="anonymous"></script>
+      <script>
+        $(function()
+        {
+          var filename = window.location.pathname.split("?")[0].split("/").slice(-1)[0];
+          
+          $("nav ul.nav li a").each(function(index)
+          {
+            if (filename === $(this).attr('href') )
+            {
+              $(this).addClass("active");
+            }
+          });
+        });
+      </script>
+    </body>
 	</html>
