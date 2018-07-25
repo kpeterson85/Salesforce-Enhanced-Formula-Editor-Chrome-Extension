@@ -70,6 +70,10 @@
         $(function()
         {
           var filename = window.location.pathname.split("?")[0].split("/").slice(-1)[0];
+          if (filename == "")
+          {
+            filename = "index.html";
+          }
           
           $("nav ul.nav li a").each(function(index)
           {
