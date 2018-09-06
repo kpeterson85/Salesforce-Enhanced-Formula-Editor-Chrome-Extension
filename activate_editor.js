@@ -247,6 +247,15 @@ function FormulaEditAreaLoaded(sTextAreaId)
 			});
 		}
 	}
+  
+  //SETUP THE FORMAT BUTTON
+  //FIND THE EDITOR AND INJECT THE FORMAT BUTTON, THE EDITOR IFRAME IS ALWAYS RIGHT AFTER THE TEXT AREA
+  var $formatButton = editorJQuery("<input type='button' value='Format' class='btnFormaFormula' style='position: absolute; left: 0; margin: 1px 0 0 2px; padding: 0 2px;' />");
+  $formatButton.click(function()
+  {
+    formatFormula(sTextAreaId);
+  });
+  editorJQuery("#" + sTextAreaId).next("iframe").contents().find("#toolbar_1").prepend($formatButton);
 }
 
 function FormulaEditAreaResized(sTextAreaId)
@@ -841,6 +850,537 @@ function GetFieldsFromFormula(sFormula)
 	return oUniqueFields;
 }
 
+
+
+
+
+
+
+
+
+
+
+
+//FORMATTING LOGIC
+function formatFormula(sTextAreaId)
+{
+	var sFormula = editAreaLoader.getValue(sTextAreaId);
+  
+  if (sFormula.indexOf("||") != -1 || sFormula.indexOf("&&") != -1)
+  {
+    alert("Formatting is not available for formulas that use || and &&.");
+    return;
+  }
+	
+	var oTokenizer = new tokenizer(sFormula);
+  
+  var rootToken = buildSyntaxTree(oTokenizer);
+  
+  identifyTokenComplexityRecursive(rootToken);
+  
+  console.log(rootToken);
+  
+  var sFormattedFormula = getFormattedFormulaRecursive(rootToken, 0);
+  
+  var iCharacterCountBefore = (sFormula.match(/[^\s\n\t]/g) || []).length;
+	var iCharacterCountAfter = (sFormattedFormula.match(/[^\s\n\t]/g) || []).length;
+  
+  //MAKE SURE WE DIDN'T ACCIDENTILY REMOVE MEANINGFUL CHARACTERS FROM THE FORMULA AND BREAK IT
+  if (iCharacterCountBefore == iCharacterCountAfter)
+  {  
+    editAreaLoader.setValue(sTextAreaId, sFormattedFormula);
+  }
+  else
+  {
+    alert("There was an error attempting to format the formula.");
+  }
+}
+
+function identifyTokenComplexityRecursive(currentToken)
+{
+  for (var i = 0; i < currentToken.children.length; i++)
+  {    
+    identifyTokenComplexityRecursive(currentToken.children[i]);
+  }
+  currentToken.complexChildren = hasComplexChildren(currentToken);
+}
+
+function hasComplexChildren(currentToken)
+{
+  var bHasComplexChildren = false;    
+  
+  if (
+    currentToken.leftSibling != null
+    &&
+    currentToken.leftSibling.type == "FUNCTION"
+  )
+  {   
+    var bComplexFunction = false;
+    var iFunctionCount = 0
+    var iComplexCount = 0;
+    var iCommaCount = 0;
+    
+    if (
+      currentToken.leftSibling.value == "IF" ||
+      currentToken.leftSibling.value == "OR" ||
+      currentToken.leftSibling.value == "AND" ||
+      currentToken.leftSibling.value == "CASE"
+    )
+    {
+      bComplexFunction = true;
+    }
+    
+    for (var c = 0; c < currentToken.children.length; c++)
+    {
+      if (currentToken.children[c].type == "FUNCTION")      
+      {
+        iFunctionCount += 1;
+      }
+      if (currentToken.children[c].complexChildren == true)
+      {      
+        iComplexCount += 1;
+      }
+      if (currentToken.children[c].type == "COMMA")
+      {
+        iCommaCount +=1;
+      }
+    }
+    //COMMA COUNT=DATE FUNCTION HAS 2 COMMAS, BLANKVALUE HAS 1 COMMA, ANYTHING MORE IS COMPLEX BY DEFAULT
+    if (bComplexFunction == true || iFunctionCount > 1 || iComplexCount > 0 || iCommaCount > 2)
+    {
+      bHasComplexChildren = true;
+    }
+  }  
+  
+  return bHasComplexChildren;
+}
+
+function getFormattedFormulaRecursive(currentToken, iTabDepth)
+{
+  var sFormula = "";
+  
+  if (currentToken.type == "NAME")
+  {
+    sFormula += currentToken.value;
+    if (currentToken.rightSibling != null && currentToken.rightSibling.type != "COMMA")
+    {
+      sFormula += " ";
+    }
+  }
+  else if (currentToken.type == "FUNCTION")
+  {
+    if (currentToken.rightSibling != null && currentToken.rightSibling.type == "OPENPARENTHESIS" && currentToken.rightSibling.complexChildren == true && currentToken.leftSibling != null && currentToken.leftSibling.type == "OPERATOR")
+    {
+      sFormula += "\n" + "  ".repeat(iTabDepth-1);
+    }
+    sFormula += currentToken.value;
+  }
+  else if (currentToken.type == "NUMBER")
+  {
+    sFormula += currentToken.value;
+    if (currentToken.rightSibling != null && currentToken.rightSibling.type != "COMMA")
+    {
+      sFormula += " ";
+    }
+  }
+  else if (currentToken.type == "COMMENT")
+  {
+    sFormula += currentToken.value;
+    if (currentToken.rightSibling == null || (currentToken.rightSibling != null && currentToken.rightSibling.type != "COMMA"))
+    {
+      sFormula += "\n" + "  ".repeat(iTabDepth-1);
+    }
+    
+  }
+  else if (currentToken.type == "OPERATOR")
+  {
+    sFormula += currentToken.value;
+    if (currentToken.rightSibling != null && currentToken.rightSibling.type != "COMMA")
+    {
+      sFormula += " ";
+    }
+  }
+  else if (currentToken.type == "OPENPARENTHESIS")
+  {
+    sFormula += currentToken.value;
+    if (currentToken.leftSibling != null && currentToken.leftSibling.type == "FUNCTION" && currentToken.complexChildren == true)
+    {
+      sFormula += "\n" + "  ".repeat(iTabDepth);
+    }
+  }
+  else if (currentToken.type == "CLOSEPARENTHESIS")
+  {
+    if (currentToken.leftSibling.leftSibling != null && currentToken.leftSibling.leftSibling.type == "FUNCTION" && currentToken.leftSibling.complexChildren == true)
+    {
+      sFormula += "\n" + "  ".repeat(iTabDepth-1);
+    }
+    sFormula += currentToken.value;
+    
+    //if ((currentToken.leftSibling.leftSibling != null && currentToken.leftSibling.leftSibling.type == "FUNCTION" && currentToken.leftSibling.complexChildren == true) == false)
+    //{
+      if (currentToken.rightSibling != null && currentToken.rightSibling.type != "COMMA")
+      {
+        sFormula += " ";
+      }
+    //}
+  }
+  else if (currentToken.type == "STRING")
+  {
+    sFormula += currentToken.value;
+    if (currentToken.rightSibling != null && currentToken.rightSibling.type != "COMMA")
+    {
+      sFormula += " ";
+    }
+  }
+  else if (currentToken.type == "COMMA")
+  {
+    sFormula += currentToken.value;
+    
+    if (currentToken.parent.complexChildren == true)
+    {
+      //DON'T ADD NEWLINE IF NEXT TOKEN IS A SINGLE LINE COMMENT
+      if (currentToken.rightSibling.type != "COMMENT" || (currentToken.rightSibling.type == "COMMENT" && currentToken.rightSibling.value.split("\n").length > 1))
+      {
+        sFormula += "\n" + "  ".repeat(iTabDepth-1);
+      }
+      else
+      {
+        sFormula += " "; //ADD SPACE BETWEEN THE COMMA AND COMMENT
+      }
+    }
+    else
+    {
+      if (currentToken.rightSibling != null && currentToken.rightSibling.type != "COMMA")
+      {
+        sFormula += " ";
+      }
+    }
+  }  
+  
+  for (var i = 0; i < currentToken.children.length; i++)
+  {    
+    sFormula += getFormattedFormulaRecursive(currentToken.children[i], iTabDepth + 1);
+  }  
+  
+  return sFormula;
+}
+
+function buildSyntaxTree(oTokenizer)
+{
+  var currentToken = null;
+  var rootToken = oTokenizer.getNewToken();
+  rootToken.value = "";
+  rootToken.type = "ROOT";
+  var currentParentToken = rootToken;
+  var parentTokenStack = [rootToken];
+  while ((currentToken = oTokenizer.getToken()) != null)
+  {    
+    if (currentToken.type == "OPENPARENTHESIS")
+    {
+      currentToken.parent = currentParentToken;
+      currentParentToken.children.push(currentToken);
+      parentTokenStack.push(currentToken);      
+      currentParentToken = currentToken;
+    }
+    else if (currentToken.type == "CLOSEPARENTHESIS")
+    {
+      connectSiblings(currentParentToken);
+      parentTokenStack.pop();
+      currentParentToken = parentTokenStack[parentTokenStack.length-1]; //get token at the top of the stack
+      currentParentToken.children.push(currentToken);
+      currentToken.parent = currentParentToken;
+    }
+    else
+    {
+      currentToken.parent = currentParentToken;
+      currentParentToken.children.push(currentToken);
+    }
+  }
+  
+  function connectSiblings(currentToken)
+  {
+    //connecting siblings of the parent we're closing
+    for (var c = 1; c < currentToken.children.length; c++)
+    {
+      currentToken.children[c-1].rightSibling = currentToken.children[c];
+      currentToken.children[c].leftSibling = currentToken.children[c-1];
+    }
+  }
+  
+  connectSiblings(rootToken);
+  
+  return rootToken;
+}
+
+
+
+function tokenizer(sFormula)
+{	
+	var currentToken = null;	
+	var lex = new lexer(sFormula);
+	
+  this.getToken = function()
+  {
+    if(lex.hasChars() == false)
+    {
+      return null;
+    }
+    
+    var nextChar = lex.getChar();
+        
+    //SKIP NON TOKENS
+    while(
+      (
+        nextChar.char == " " ||
+        nextChar.char == "\n" ||
+        nextChar.char == "\t"
+      )
+      && lex.hasChars()
+    )
+    {
+      nextChar = lex.getChar();
+    }
+    
+    if (isNumber(nextChar.code) == true)
+    {
+      currentToken = this.getNewToken();
+      currentToken.value += nextChar.char;
+      currentToken.type = "NUMBER";
+      
+      while(lex.hasChars() && isNumber(lex.peekChar().code))
+      {
+        currentToken.value += lex.getChar().char;
+      }
+      
+      return currentToken;
+    }
+    else if (isName(nextChar.code) == true)
+    {			
+      currentToken = this.getNewToken();
+      currentToken.value += nextChar.char;
+      currentToken.type = "NAME";
+      
+      while(lex.hasChars() && isName(lex.peekChar().code))
+      {
+        currentToken.value += lex.getChar().char;
+      }
+      if (lex.peekNonSpaceChar().char == "(")
+      {
+        currentToken.type = "FUNCTION";
+      }
+
+      return currentToken;
+    }
+    
+    else if (nextChar.char == "/" && lex.hasChars() && lex.peekChar().char == "*")
+    {
+      currentToken = this.getNewToken();
+      currentToken.value += nextChar.char;
+      currentToken.type = "COMMENT";
+      
+      var prevChar = nextChar;
+      while(lex.hasChars())
+      {
+        nextChar = lex.getChar();
+        currentToken.value += nextChar.char;        
+        if (nextChar.char == "/" && prevChar.char == "*")
+        {
+          break;
+        }
+        prevChar = nextChar;
+      }
+      
+      return currentToken;
+    }
+    else if (isOperator(nextChar.char) == true)
+    {
+      currentToken = this.getNewToken();
+      currentToken.value += nextChar.char;
+      currentToken.type = "OPERATOR";
+      
+      while(lex.hasChars() && isOperator(lex.peekChar().char))
+      {
+        currentToken.value += lex.getChar().char;
+      }
+      
+      return currentToken;
+    }
+    else if (nextChar.char == "(")
+    {
+      currentToken = this.getNewToken();
+      currentToken.value += nextChar.char;
+      currentToken.type = "OPENPARENTHESIS";
+      
+      return currentToken;
+    }
+    else if (nextChar.char == ")")
+    {
+      currentToken = this.getNewToken();
+      currentToken.value += nextChar.char;
+      currentToken.type = "CLOSEPARENTHESIS";
+      
+      return currentToken;
+    }
+    else if (nextChar.char == "\"")
+    {
+      currentToken = this.getNewToken();
+      currentToken.value += nextChar.char;
+      currentToken.type = "STRING";
+      
+      while(lex.hasChars())
+      {
+        nextChar = lex.getChar();
+        currentToken.value += nextChar.char;        
+        if (nextChar.char == "\"")
+        {
+          break;
+        }
+      }
+      
+      return currentToken;
+    }
+    else if (nextChar.char == "\'")
+    {
+      currentToken = this.getNewToken();
+      currentToken.value += nextChar.char;
+      currentToken.type = "STRING";
+      
+      while(lex.hasChars())
+      {
+        nextChar = lex.getChar();
+        currentToken.value += nextChar.char;        
+        if (nextChar.char == "\'")
+        {
+          break;
+        }
+      }
+      
+      return currentToken;
+    }
+    else if (nextChar.char == ",")
+    {
+      currentToken = this.getNewToken();
+      currentToken.value += nextChar.char;
+      currentToken.type = "COMMA";
+      
+      return currentToken;
+    }
+  };
+	
+  this.getNewToken = function()
+	{
+		return {
+			value: "",
+			type: "",			
+			parent: null,
+      leftSibling: null,
+      rightSibling: null,
+			children: [],
+      complexChildren: false
+		};
+	}
+	
+	//FUNCTION NAME OR FIELD NAME
+	function isName(iCharCode)
+	{
+		return 	(iCharCode >= 65 && iCharCode <= 90) || //UPPERCASE LETTERS
+				(iCharCode >= 97 && iCharCode <= 122) || //LOWERCASE LETTERS
+				iCharCode == 46 || //DECIMAL
+				iCharCode == 95 || //UNDERSCORES
+        (iCharCode >= 48 && iCharCode <= 57) //NUMBERS CAN BE IN NAMES, NAME MUST START WITH LETTER AND THEN CAN CONTAIN NUMBERS
+	}
+
+	function isNumber(iCharCode)
+	{
+		return 	(iCharCode >= 48 && iCharCode <= 57) //0-9
+	}
+	
+	function isOperator(sChar)
+	{
+		return 	(
+			sChar == "+" ||
+			sChar == "-" ||
+			sChar == "*" ||
+			sChar == "/" ||
+			sChar == "^" ||
+			sChar == ">" ||
+			sChar == "<" ||
+			sChar == "=" ||
+			sChar == "!" ||
+			sChar == "^" ||
+			sChar == "&" ||
+			sChar == "|"
+		);
+	}
+	
+}
+
+
+
+function lexer(sFormula)
+{
+	this.formula = sFormula;
+	this.currentIndex = 0;
+	this.hasChars = function()
+	{
+		return this.currentIndex <= this.formula.length;
+	};
+	this.peekChar = function()
+	{
+		if (this.currentIndex <= this.formula.length)
+		{
+			var sChar = this.formula.charAt(this.currentIndex)
+			var iCharCode = sChar.charCodeAt(0);
+			
+			return { char: sChar, code: iCharCode };			
+		}
+		else
+		{
+			return null;
+		}
+	}
+  this.peekNonSpaceChar = function()
+	{
+		if (this.currentIndex <= this.formula.length)
+		{
+			for (var iForward = 0; this.currentIndex + iForward < this.formula.length; iForward ++)
+      {
+        var sCharForward = this.formula.charAt(this.currentIndex + iForward);
+        if (
+          sCharForward != " " &&
+          sCharForward != "\n" &&
+          sCharForward != "\t"
+        )
+        {
+          var sChar = sCharForward;
+          var iCharCode = sCharForward.charCodeAt(0);
+          
+          return { char: sChar, code: iCharCode };	
+        }
+      }      		
+		}
+		else
+		{
+			return null;
+		}
+	}
+	this.getChar = function()
+	{
+		if (this.currentIndex <= this.formula.length)
+		{
+			var sChar = this.formula.charAt(this.currentIndex)
+			var iCharCode = sChar.charCodeAt(0);
+			
+			this.currentIndex += 1;
+			
+			return { char: sChar, code: iCharCode };			
+		}
+		else
+		{
+			return null;
+		}
+	}	
+}
 
 
 
