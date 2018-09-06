@@ -864,15 +864,15 @@ function GetFieldsFromFormula(sFormula)
 //FORMATTING LOGIC
 function formatFormula(sTextAreaId)
 {
-	var sFormula = editAreaLoader.getValue(sTextAreaId);
+  var sFormula = editAreaLoader.getValue(sTextAreaId);
   
   if (sFormula.indexOf("||") != -1 || sFormula.indexOf("&&") != -1)
   {
     alert("Formatting is not available for formulas that use || and &&.");
     return;
   }
-	
-	var oTokenizer = new tokenizer(sFormula);
+  
+  var oTokenizer = new tokenizer(sFormula);
   
   var rootToken = buildSyntaxTree(oTokenizer);
   
@@ -883,7 +883,7 @@ function formatFormula(sTextAreaId)
   var sFormattedFormula = getFormattedFormulaRecursive(rootToken, 0);
   
   var iCharacterCountBefore = (sFormula.match(/[^\s\n\t]/g) || []).length;
-	var iCharacterCountAfter = (sFormattedFormula.match(/[^\s\n\t]/g) || []).length;
+  var iCharacterCountAfter = (sFormattedFormula.match(/[^\s\n\t]/g) || []).length;
   
   //MAKE SURE WE DIDN'T ACCIDENTILY REMOVE MEANINGFUL CHARACTERS FROM THE FORMULA AND BREAK IT
   if (iCharacterCountBefore == iCharacterCountAfter)
@@ -1116,9 +1116,9 @@ function buildSyntaxTree(oTokenizer)
 
 function tokenizer(sFormula)
 {	
-	var currentToken = null;	
-	var lex = new lexer(sFormula);
-	
+  var currentToken = null;	
+  var lex = new lexer(sFormula);
+  
   this.getToken = function()
   {
     if(lex.hasChars() == false)
@@ -1266,84 +1266,84 @@ function tokenizer(sFormula)
       return currentToken;
     }
   };
-	
+  
   this.getNewToken = function()
-	{
-		return {
-			value: "",
-			type: "",			
-			parent: null,
+  {
+    return {
+      value: "",
+      type: "",			
+      parent: null,
       leftSibling: null,
       rightSibling: null,
-			children: [],
+      children: [],
       complexChildren: false
-		};
-	}
-	
-	//FUNCTION NAME OR FIELD NAME
-	function isName(iCharCode)
-	{
-		return 	(iCharCode >= 65 && iCharCode <= 90) || //UPPERCASE LETTERS
-				(iCharCode >= 97 && iCharCode <= 122) || //LOWERCASE LETTERS
-				iCharCode == 46 || //DECIMAL
-				iCharCode == 95 || //UNDERSCORES
+    };
+  }
+  
+  //FUNCTION NAME OR FIELD NAME
+  function isName(iCharCode)
+  {
+    return 	(iCharCode >= 65 && iCharCode <= 90) || //UPPERCASE LETTERS
+        (iCharCode >= 97 && iCharCode <= 122) || //LOWERCASE LETTERS
+        iCharCode == 46 || //DECIMAL
+        iCharCode == 95 || //UNDERSCORES
         (iCharCode >= 48 && iCharCode <= 57) //NUMBERS CAN BE IN NAMES, NAME MUST START WITH LETTER AND THEN CAN CONTAIN NUMBERS
-	}
+  }
 
-	function isNumber(iCharCode)
-	{
-		return 	(iCharCode >= 48 && iCharCode <= 57) //0-9
-	}
-	
-	function isOperator(sChar)
-	{
-		return 	(
-			sChar == "+" ||
-			sChar == "-" ||
-			sChar == "*" ||
-			sChar == "/" ||
-			sChar == "^" ||
-			sChar == ">" ||
-			sChar == "<" ||
-			sChar == "=" ||
-			sChar == "!" ||
-			sChar == "^" ||
-			sChar == "&" ||
-			sChar == "|"
-		);
-	}
-	
+  function isNumber(iCharCode)
+  {
+    return 	(iCharCode >= 48 && iCharCode <= 57) //0-9
+  }
+  
+  function isOperator(sChar)
+  {
+    return 	(
+      sChar == "+" ||
+      sChar == "-" ||
+      sChar == "*" ||
+      sChar == "/" ||
+      sChar == "^" ||
+      sChar == ">" ||
+      sChar == "<" ||
+      sChar == "=" ||
+      sChar == "!" ||
+      sChar == "^" ||
+      sChar == "&" ||
+      sChar == "|"
+    );
+  }
+  
 }
 
 
 
 function lexer(sFormula)
 {
-	this.formula = sFormula;
-	this.currentIndex = 0;
-	this.hasChars = function()
-	{
-		return this.currentIndex <= this.formula.length;
-	};
-	this.peekChar = function()
-	{
-		if (this.currentIndex <= this.formula.length)
-		{
-			var sChar = this.formula.charAt(this.currentIndex)
-			var iCharCode = sChar.charCodeAt(0);
-			
-			return { char: sChar, code: iCharCode };			
-		}
-		else
-		{
-			return null;
-		}
-	}
+  this.formula = sFormula;
+  this.currentIndex = 0;
+  this.hasChars = function()
+  {
+    return this.currentIndex <= this.formula.length;
+  };
+  this.peekChar = function()
+  {
+    if (this.currentIndex <= this.formula.length)
+    {
+      var sChar = this.formula.charAt(this.currentIndex)
+      var iCharCode = sChar.charCodeAt(0);
+      
+      return { char: sChar, code: iCharCode };			
+    }
+    else
+    {
+      return null;
+    }
+  }
   this.peekNonSpaceChar = function()
-	{
-		if (this.currentIndex <= this.formula.length)
-		{
-			for (var iForward = 0; this.currentIndex + iForward < this.formula.length; iForward ++)
+  {
+    if (this.currentIndex <= this.formula.length)
+    {
+      for (var iForward = 0; this.currentIndex + iForward < this.formula.length; iForward ++)
       {
         var sCharForward = this.formula.charAt(this.currentIndex + iForward);
         if (
@@ -1358,28 +1358,28 @@ function lexer(sFormula)
           return { char: sChar, code: iCharCode };	
         }
       }      		
-		}
-		else
-		{
-			return null;
-		}
-	}
-	this.getChar = function()
-	{
-		if (this.currentIndex <= this.formula.length)
-		{
-			var sChar = this.formula.charAt(this.currentIndex)
-			var iCharCode = sChar.charCodeAt(0);
-			
-			this.currentIndex += 1;
-			
-			return { char: sChar, code: iCharCode };			
-		}
-		else
-		{
-			return null;
-		}
-	}	
+    }
+    else
+    {
+      return null;
+    }
+  }
+  this.getChar = function()
+  {
+    if (this.currentIndex <= this.formula.length)
+    {
+      var sChar = this.formula.charAt(this.currentIndex)
+      var iCharCode = sChar.charCodeAt(0);
+      
+      this.currentIndex += 1;
+      
+      return { char: sChar, code: iCharCode };			
+    }
+    else
+    {
+      return null;
+    }
+  }	
 }
 
 
