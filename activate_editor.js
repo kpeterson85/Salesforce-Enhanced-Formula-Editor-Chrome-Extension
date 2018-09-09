@@ -872,27 +872,35 @@ function formatFormula(sTextAreaId)
     return;
   }
   
-  var oTokenizer = new tokenizer(sFormula);
-  
-  var rootToken = buildSyntaxTree(oTokenizer);
-  
-  identifyTokenComplexityRecursive(rootToken);
-  
-  console.log(rootToken);
-  
-  var sFormattedFormula = getFormattedFormulaRecursive(rootToken, 0);
-  
-  var iCharacterCountBefore = (sFormula.match(/[^\s\n\t]/g) || []).length;
-  var iCharacterCountAfter = (sFormattedFormula.match(/[^\s\n\t]/g) || []).length;
-  
-  //MAKE SURE WE DIDN'T ACCIDENTILY REMOVE MEANINGFUL CHARACTERS FROM THE FORMULA AND BREAK IT
-  if (iCharacterCountBefore == iCharacterCountAfter)
-  {  
-    editAreaLoader.setValue(sTextAreaId, sFormattedFormula);
+  try
+  {
+    var oTokenizer = new tokenizer(sFormula);
+    
+    var rootToken = buildSyntaxTree(oTokenizer);
+    
+    identifyTokenComplexityRecursive(rootToken);
+    
+    //console.log(rootToken);
+    
+    var sFormattedFormula = getFormattedFormulaRecursive(rootToken, 0);
+    
+    var iCharacterCountBefore = (sFormula.match(/[^\s\n\t]/g) || []).length;
+    var iCharacterCountAfter = (sFormattedFormula.match(/[^\s\n\t]/g) || []).length;
+    
+    //MAKE SURE WE DIDN'T ACCIDENTILY REMOVE MEANINGFUL CHARACTERS FROM THE FORMULA AND BREAK IT
+    if (iCharacterCountBefore == iCharacterCountAfter)
+    {  
+      editAreaLoader.setValue(sTextAreaId, sFormattedFormula);
+    }
+    else
+    {
+      alert("There was an error attempting to format the formula.");
+    }
   }
-  else
+  catch(err)
   {
     alert("There was an error attempting to format the formula.");
+    console.log(err);
   }
 }
 
@@ -1285,6 +1293,7 @@ function tokenizer(sFormula)
   {
     return 	(iCharCode >= 65 && iCharCode <= 90) || //UPPERCASE LETTERS
         (iCharCode >= 97 && iCharCode <= 122) || //LOWERCASE LETTERS
+        iCharCode == 36 || //DOLLAR SIGN
         iCharCode == 46 || //DECIMAL
         iCharCode == 95 || //UNDERSCORES
         (iCharCode >= 48 && iCharCode <= 57) //NUMBERS CAN BE IN NAMES, NAME MUST START WITH LETTER AND THEN CAN CONTAIN NUMBERS
