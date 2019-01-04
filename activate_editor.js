@@ -457,7 +457,7 @@ function LoadFormulaFieldDetails(e)
 	$table.find("tr.headerRow a.loadFieldEditLinks").click(function()
 	{
 		//LOOP OVER EACH FIELD EXCEPT THE FIELD WE ARE EDITING
-		$table.find("> tbody > tr.detailField").each(function()
+		$table.find("> tbody > tr.detailField:not('.invalidField')").each(function()
 		{
 			var $fieldTR = editorJQuery(this);
 			
@@ -549,7 +549,7 @@ function FindFieldDescribeRecursive($fieldTR, sObjectLookupFieldName, sObjectNam
 	
 	if (oFieldDescribe == null)
 	{
-		$fieldTR.find("td.fieldType").html("Not Found <span class='formulaEditorTooltip' title='The field could not be found because you do not have access to it on the object.'>?</span>").find(".formulaEditorTooltip").css(oEditorTooltipStyles);
+		$fieldTR.addClass("invalidField").find("td.fieldType").html("Not Found <span class='formulaEditorTooltip' title='The field could not be found because you do not have access to it on the object or there was a parse error.'>?</span>").find(".formulaEditorTooltip").css(oEditorTooltipStyles);
 	}
 }
 
@@ -707,7 +707,7 @@ function LoadFieldValuesPreview(e)
 	//LOOP OVER FIELD DETAIL TABLE ROWS AND BUILD SOQL QUERY
 	var oFields = [];
 	var oFormulaFieldParentFields = [];
-	oFormulaEditorSettings.FieldsTable.find("> tbody > tr.valueField > td.fieldPath").each(function()
+	oFormulaEditorSettings.FieldsTable.find("> tbody > tr.valueField:not('.invalidField') > td.fieldPath").each(function()
 	{
 		var sField = editorJQuery(this).text();
 		oFields.push(sField);
@@ -743,10 +743,20 @@ function LoadFieldValuesPreview(e)
 	});
 	
 	jsforceConnection.query("SELECT " + oUniqueRequestFields.join(",") + " FROM " + oFormulaEditorSettings.ObjectAPIName + " WHERE Id = '" + sRecordId + "'", function(err, result) {
-		if (err) { return console.error(err); }
+		if (err)
+		{
+			alert("Error requesting record");
+			console.error(err);
+			return false;
+		}
+		if (result.records.length == 0)
+		{
+			alert("No record found");
+			return false;
+		}
 		var oRecord = result.records[0];
 		//console.log(oRecord);
-		oFormulaEditorSettings.FieldsTable.find("> tbody > tr.valueField > td.fieldPath").each(function()
+		oFormulaEditorSettings.FieldsTable.find("> tbody > tr.valueField:not('.invalidField') > td.fieldPath").each(function()
 		{
 			var sField = editorJQuery(this).text();
 			var oFieldParts = sField.split(".");
@@ -799,10 +809,10 @@ function GetFieldsFromFormula(sFormula)
 	sFormula = sFormula.replace(/\,/ig, " ");
 	
 	//OPERATORS
-	sFormula = sFormula.replace(/[\+\-\/\*\=\<\>]/ig, " ");
+	sFormula = sFormula.replace(/[\+\-\/\*\=\<\>\^]/ig, " ");
 	
 	//VALUES
-	sFormula = sFormula.replace(/(\btrue\b|\bfalse\b|\bnull\b|\b[0-9]+\b)/ig, " ");
+	sFormula = sFormula.replace(/(\btrue\b|\bfalse\b|\bnull\b|\b[0-9]+(\.[0-9]+)?\b)/ig, " ");
 	
 	//FUNCTIONS
 	sFormula = sFormula.replace(/(\bABS\b|\bADDMONTHS\b|\bBEGINS\b|\bBLANKVALUE\b|\bBR\b|\bCASESAFEID\b|\bCEILING\b|\bCONTAINS\b|\bCURRENCYRATE\b|\bDATE\b|\bDATETIMEVALUE\b|\bDATEVALUE\b|\bDAY\b|\bDISTANCE\b|\bEXP\b|\bFIND\b|\bFLOOR\b|\bGEOLOCATION\b|\bGETSESSIONID\b|\bHOUR\b|\bHYPERLINK\b|\bIMAGE\b|\bINCLUDES\b|\bISBLANK\b|\bISCHANGED\b|\bISCLONE\b|\bISNEW\b|\bISNULL\b|\bISNUMBER\b|\bISPICKVAL\b|\bLEFT\b|\bLEN\b|\bLN\b|\bLOG\b|\bLOWER\b|\bLPAD\b|\bMAX\b|\bMCEILING\b|\bMFLOOR\b|\bMID\b|\bMILLISECOND\b|\bMIN\b|\bMINUTE\b|\bMOD\b|\bMONTH\b|\bNOT\b|\bNOW\b|\bNULLVALUE\b|\bPRIORVALUE\b|\bREGEX\b|\bRIGHT\b|\bROUND\b|\bRPAD\b|\bSQRT\b|\bSECOND\b|\bSUBSTITUTE\b|\bTEXT\b|\bTIMENOW\b|\bTIMEVALUE\b|\bTODAY\b|\bTRIM\b|\bUPPER\b|\bVALUE\b|\bVLOOKUP\b|\bWEEKDAY\b|\bYEAR\b)/ig, " ");
@@ -1155,7 +1165,7 @@ function tokenizer(sFormula)
       currentToken.value += nextChar.char;
       currentToken.type = "NUMBER";
       
-      while(lex.hasChars() && isNumber(lex.peekChar().code))
+      while(lex.hasChars() && (isNumber(lex.peekChar().code) || lex.peekChar().code == 46)) //COLLECT NUMBERS AND DECIMAL
       {
         currentToken.value += lex.getChar().char;
       }
