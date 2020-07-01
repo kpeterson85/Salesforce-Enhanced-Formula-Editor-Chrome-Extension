@@ -31,5 +31,5 @@
 	 ],
    "description": "Enhances the formula editor textareas to have syntax highlighting, tabbing, parenthesis matching, and find and replace.",
    "name": "Salesforce.com Enhanced Formula Editor",
-   "version": "1.5.3"
+   "version": "1.5.4"
 }
