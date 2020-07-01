@@ -70,7 +70,8 @@ if (elements.length == 1)
 			//CONNECT TO SALESFORCE
 			window.jsforceConnection = new jsforce.Connection({
 				serverUrl : "https://" + document.location.host,
-				sessionId : readCookie("sid")
+				sessionId : readCookie("sid"),
+				version: "48.0"
 			});
 
 			ActivateEditor(oFormulaEditorSettings);
@@ -193,7 +194,7 @@ function FormulaEditAreaLoaded(sTextAreaId)
 	{
 		//ShowNewVersionMessage();
 		
-		var $fieldDetails = editorJQuery("<span class='formulaEditorFieldsLoadShell' style='float: left;'><input type='submit' class='btn formulaEditorFieldsLoad' value='Load Field Details' /><span class='formulaEditorTooltip' title='Loads details about the fields found in the formula.'>?</span></span><div class='formulaEditorFields' style='display: none;'><div class='fieldValuesPreviewShell' style='display: inline; text-align: right; float: right;'><input type='text' class='fieldValuesPreviewId' placeholder='Enter Record Id' /> <input type='button' class='fieldValuesPreviewButton btn' value='Load Record Values' /></div><table class='formulaEditorFieldsTable list'></table></div>");
+		var $fieldDetails = editorJQuery("<span class='formulaEditorFieldsLoadShell' style='float: left;'><input type='submit' class='btn formulaEditorFieldsLoad' value='Load Field Details' /><span class='formulaEditorTooltip' title='Loads details about the fields found in the formula.'>?</span></span><div class='formulaEditorFields' style='display: none;'><div class='fieldValuesPreviewShell' style='display: inline; text-align: right; float: right;'><input type='text' class='fieldValuesPreviewId' placeholder='Enter Record Id' /> <input type='button' class='fieldValuesPreviewButton btn' value='Load Record Values' /></div><div class='formulaEditorError' style='display: none; clear: both; background: #f8d7da; padding: 5px; border: 1px solid #ff808d; border-radius: 5px;'></div><table class='formulaEditorFieldsTable list'></table></div>");
 					
 		$loadButton = $fieldDetails.find("input.formulaEditorFieldsLoad");
 		$loadButton.data("formulaEditorSettings", oFormulaEditorSettings);
@@ -227,23 +228,40 @@ function FormulaEditAreaLoaded(sTextAreaId)
 		
 		if (oFormulaEditorSettings.ObjectId != "")
 		{
-			editorJQuery.get("/" + oFormulaEditorSettings.ObjectId, function( data ) {
+			editorJQuery.get("/" + oFormulaEditorSettings.ObjectId, function( data )
+			{
 				oFormulaEditorSettings.ObjectAPIName = editorJQuery(data).find("table.detailList td:contains('API Name')").next().text();
 				//LOAD CURRENT OBJECT FIELDS
-				jsforceConnection.sobject(oFormulaEditorSettings.ObjectAPIName).describe$(function(err, meta) {
-					if (err) { return console.error(err); }
-					oFormulaEditorSettings.ObjectLabel = meta.label;
-					oFormulaEditorSettings.ObjectFields = meta.fields;
+				jsforceConnection.sobject(oFormulaEditorSettings.ObjectAPIName).describe$(function(err, meta)
+				{
+					if (err)
+					{
+						console.error(err);
+						$fieldsShell.find(".formulaEditorError").show().text("Error describing object '" + oFormulaEditorSettings.ObjectAPIName + "'. It may only be accessible from a newer version of the API or you may not have meta data api access. Error message: " + err.message);
+					}
+					else
+					{
+						oFormulaEditorSettings.ObjectLabel = meta.label;
+						oFormulaEditorSettings.ObjectFields = meta.fields;
+					}
 				});
 			});
 		}
 		else if (oFormulaEditorSettings.ObjectAPIName != "")
 		{
 			//LOAD CURRENT OBJECT FIELDS
-			jsforceConnection.sobject(oFormulaEditorSettings.ObjectAPIName).describe$(function(err, meta) {
-				if (err) { return console.error(err); }
-				oFormulaEditorSettings.ObjectLabel = meta.label;
-				oFormulaEditorSettings.ObjectFields = meta.fields;
+			jsforceConnection.sobject(oFormulaEditorSettings.ObjectAPIName).describe$(function(err, meta)
+			{
+				if (err)
+				{
+					console.error(err);
+					$fieldsShell.find(".formulaEditorError").show().text("Error describing object '" + oFormulaEditorSettings.ObjectAPIName + "'. It may only be accessible from a newer version of the API or you may not have meta data api access. Error message:  " + err.message);
+				}
+				else
+				{
+					oFormulaEditorSettings.ObjectLabel = meta.label;
+					oFormulaEditorSettings.ObjectFields = meta.fields;
+				}
 			});
 		}
 	}
@@ -366,12 +384,6 @@ function LoadFormulaFieldDetails(e)
 {	
 	var oFormulaEditorSettings = editorJQuery(this).data("formulaEditorSettings");
 	
-	if (oFormulaEditorSettings.ObjectFields == null)
-	{
-		//USER CLICKED THE LOAD BUTTON TOO QUICK, STILL WAITING FOR THE CURRENT OBJECT META DATA TO LOAD
-		return false;
-	}
-	
 	var sFormula = editAreaLoader.getValue(oFormulaEditorSettings.TextAreaId);
 	var oFields = GetFieldsFromFormula(sFormula);
 	
@@ -418,7 +430,10 @@ function LoadFormulaFieldDetails(e)
 		else
 		{
 			$fieldTR.addClass("detailField").addClass("valueField")
-			FindFieldDescribeRecursive($fieldTR, null, oFormulaEditorSettings.ObjectAPIName, i, oFieldParts, 0, oFormulaEditorSettings.ObjectFields);
+			if (oFormulaEditorSettings.ObjectFields != null)
+			{
+				FindFieldDescribeRecursive($fieldTR, null, oFormulaEditorSettings.ObjectAPIName, i, oFieldParts, 0, oFormulaEditorSettings.ObjectFields);
+			}
 		}
 	}
 	
@@ -549,7 +564,7 @@ function FindFieldDescribeRecursive($fieldTR, sObjectLookupFieldName, sObjectNam
 	
 	if (oFieldDescribe == null)
 	{
-		$fieldTR.addClass("invalidField").find("td.fieldType").html("Not Found <span class='formulaEditorTooltip' title='The field could not be found because you do not have access to it on the object or there was a parse error.'>?</span>").find(".formulaEditorTooltip").css(oEditorTooltipStyles);
+		$fieldTR.addClass("invalidField").find("td.fieldType").html("Not Found <span class='formulaEditorTooltip' title='The field could not be found by the meta data api describe call or there was a parse error.'>?</span>").find(".formulaEditorTooltip").css(oEditorTooltipStyles);
 	}
 }
 
