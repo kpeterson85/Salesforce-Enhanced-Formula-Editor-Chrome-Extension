@@ -42,7 +42,6 @@ If the extension can identify what object the formula is on then it will provide
 - To query the REST API for SOQL queries to return field values for a record.
  
 ## Getting the Extension
-### To install released version
 
 Install from the [chrome web store](https://chrome.google.com/webstore/detail/salesforcecom-enhanced-fo/cnlnnpnjccjcmecojdhgpknalcahkhio)
 
