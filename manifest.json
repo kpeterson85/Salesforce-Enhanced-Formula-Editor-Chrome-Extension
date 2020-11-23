@@ -1,35 +1,46 @@
 {
-   "manifest_version": 2,
-	 "browser_action": {
-      "default_icon": "icon.png"
-   },
-   "content_scripts": [ {
-      "js": [ "contentscript.js" ],
-      "matches": [ "https://*.salesforce.com/*", "https://*.lightning.force.com/*" ],
-	    "all_frames": true
-   } ],
-	 "web_accessible_resources": [
-			"edit_area_loader.js",
-			"activate_editor.js",
-			"elements_functions.js",
-			"resize_area.js",
-			"reg_syntax.js",
-			"langs/en.js",
-			"reg_syntax/forceformula.js",
-			"edit_area.css",
-			"edit_area.js",
-			"manage_area.js",
-			"edit_area_functions.js",
-			"keyboard.js",
-			"search_replace.js",
-			"highlight.js",
-			"regexp.js",
-			"images/*",
-			"jsforce-core.min.js",
-			"jquery.min.js",
-			"FieldDetailsScreenshot.jpg"
-	 ],
-   "description": "Enhances the formula editor textareas to have syntax highlighting, tabbing, parenthesis matching, and find and replace.",
-   "name": "Salesforce.com Enhanced Formula Editor",
-   "version": "1.5.3"
+	"manifest_version": 2,
+	"browser_action": {
+		"default_icon": {
+			"16": "icon16.png",
+			"24": "icon24.png",
+			"32": "icon32.png"
+		}
+	},
+	"icons": {
+		"16": "icon16.png",
+		"48": "icon48.png",
+		"128": "icon128.png"
+	},
+	"content_scripts": [
+		{
+			"js": [ "contentscript.js" ],
+			"matches": [ "https://*.salesforce.com/*", "https://*.lightning.force.com/*" ],
+			"all_frames": true
+		}
+	],
+	"web_accessible_resources": [
+		"edit_area_loader.js",
+		"activate_editor.js",
+		"elements_functions.js",
+		"resize_area.js",
+		"reg_syntax.js",
+		"langs/en.js",
+		"reg_syntax/forceformula.js",
+		"edit_area.css",
+		"edit_area.js",
+		"manage_area.js",
+		"edit_area_functions.js",
+		"keyboard.js",
+		"search_replace.js",
+		"highlight.js",
+		"regexp.js",
+		"images/*",
+		"jsforce-core.min.js",
+		"jquery.min.js",
+		"FieldDetailsScreenshot.jpg"
+	],
+	"description": "Enhances the formula editor textareas to have syntax highlighting, tabbing, parenthesis matching, and find and replace.",
+	"name": "Salesforce.com Enhanced Formula Editor",
+	"version": "1.5.5"
 }

@@ -71,7 +71,7 @@ if (elements.length == 1)
 			window.jsforceConnection = new jsforce.Connection({
 				serverUrl : "https://" + document.location.host,
 				sessionId : readCookie("sid"),
-				version: "48.0"
+				version: "50.0"
 			});
 
 			ActivateEditor(oFormulaEditorSettings);
@@ -228,9 +228,14 @@ function FormulaEditAreaLoaded(sTextAreaId)
 		
 		if (oFormulaEditorSettings.ObjectId != "")
 		{
-			editorJQuery.get("/" + oFormulaEditorSettings.ObjectId, function( data )
-			{
-				oFormulaEditorSettings.ObjectAPIName = editorJQuery(data).find("table.detailList td:contains('API Name')").next().text();
+			//LOOKUP CUSTOM OBJECT API NAME USING ITS OBJECT ID
+			jsforceConnection.tooling.sobject('CustomObject')
+			.find({ Id: oFormulaEditorSettings.ObjectId })
+			.execute(function(err, records) {
+				if (err) { return console.error(err); }
+				//console.log("fetched : " + records[0]);
+				oFormulaEditorSettings.ObjectAPIName = records[0].DeveloperName + "__c";
+				
 				//LOAD CURRENT OBJECT FIELDS
 				jsforceConnection.sobject(oFormulaEditorSettings.ObjectAPIName).describe$(function(err, meta)
 				{
