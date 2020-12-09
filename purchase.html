@@ -38,9 +38,9 @@ title: Purchase - Salesforce Enhanced Formula Editor
               mode: mode,
               lineItems: items,
               successUrl:
-                DOMAIN + 'purchase.html?result=cancelled',
-              cancelUrl:
                 DOMAIN + 'purchase.html?result=success',
+              cancelUrl:
+                DOMAIN + 'purchase.html?result=cancelled',
             })
             .then(handleResult);
         });
