@@ -38,9 +38,9 @@ title: Purchase - Salesforce Enhanced Formula Editor
               mode: mode,
               lineItems: items,
               successUrl:
-                DOMAIN + 'success.html?session_id={CHECKOUT_SESSION_ID}',
+                DOMAIN + 'purchase.html?result=cancelled',
               cancelUrl:
-                DOMAIN + 'canceled.html?session_id={CHECKOUT_SESSION_ID}',
+                DOMAIN + 'purchase.html?result=success',
             })
             .then(handleResult);
         });
