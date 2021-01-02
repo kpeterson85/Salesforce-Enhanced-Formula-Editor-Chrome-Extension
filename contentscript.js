@@ -66,6 +66,13 @@ function init() {
 						hdnLicense.value = result.FormulaEditorLicense;
 						document.getElementsByTagName("body")[0].appendChild(hdnLicense);
 						
+						var sOptionsUrl = chrome.extension.getURL("options.html");
+						var hdnOptionsURL = document.createElement("input");
+						hdnOptionsURL.type = "hidden";
+						hdnOptionsURL.id = "hdnFormulaEditorOptionsURL";
+						hdnOptionsURL.value = sOptionsUrl;
+						document.getElementsByTagName("body")[0].appendChild(hdnOptionsURL);						
+						
 						var activate = document.createElement("script");
 						activate.type = "text/javascript";
 						activate.src = chrome.extension.getURL("activate_editor.js");

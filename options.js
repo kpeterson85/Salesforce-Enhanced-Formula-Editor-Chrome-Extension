@@ -39,21 +39,33 @@ document.addEventListener('DOMContentLoaded', function()
 					data.success
 				)
 				{
-					document.getElementById("status").innerHTML = "Success!: " + JSON.stringify(data);
+					document.getElementById("status").innerHTML = "Subscription license key validated successfully!";
+					document.getElementById("status").classList.remove("error");
+					document.getElementById("status").classList.add("success");
+					document.getElementById("status").style.display = "block";
 				}
 				else
 				{
-					document.getElementById("status").innerHTML = "Error: " + JSON.stringify(data);
+					document.getElementById("status").innerHTML = "The subscription license key entered is either not valid or the subscription is not active.";
+					document.getElementById("status").classList.remove("success");
+					document.getElementById("status").classList.add("error");
+					document.getElementById("status").style.display = "block";
 				}
 			})
 			.catch(function (err)
 			{
-				document.getElementById("status").innerHTML = "Error: " + err;
+				document.getElementById("status").innerHTML = "An error occurred validating the subscription license key. Please try again.";
+				document.getElementById("status").classList.remove("success");
+				document.getElementById("status").classList.add("error");
+				document.getElementById("status").style.display = "block";
 			});
 		}
 		else
 		{
 			document.getElementById("status").innerHTML = "No key provided";
+			document.getElementById("status").classList.remove("success");
+			document.getElementById("status").classList.add("error");
+			document.getElementById("status").style.display = "block";
 		}
 		
 		e.preventDefault();

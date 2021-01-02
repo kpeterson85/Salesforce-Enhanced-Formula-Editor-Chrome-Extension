@@ -20,6 +20,7 @@
 		}
 	],
 	"web_accessible_resources": [
+		"options.html",
 		"edit_area_loader.js",
 		"activate_editor.js",
 		"elements_functions.js",
