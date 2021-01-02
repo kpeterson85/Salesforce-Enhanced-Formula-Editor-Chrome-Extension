@@ -133,7 +133,79 @@ function ActivateEditor(oFormulaEditorSettings)
 		sFontSize = localStorage['FormulaEditorFontSize'];
 	}
 	
-	editAreaLoader.init({
+	var bLoadEditor = false;
+	
+	//IF LOADING THE MAIN INSTANCE ON THE PAGE THEN DO THE LICENSE CHECK
+	if (oFormulaEditorSettings.OverrideInsertButtons == true)
+	{
+		var eStatusMessage = editorJQuery("<div class='formulaEditorStatus' style='display: none; color: #856404; background-color: #fff3cd; border: 1px solid #ffe699; padding: 10px 15px; margin: 5px 5px 5px 0; line-height: 1.5;'></div>");
+		var eStatusMessage = editorJQuery("<div class='formulaEditorStatus' style='display: none; color: #856404; background-color: #fff3cd; border: 1px solid #ffe699; padding: 10px 15px; margin: 5px 5px 5px 0; line-height: 1.5;'></div>");
+		editorJQuery("#" + oFormulaEditorSettings.TextAreaId).before(eStatusMessage);
+		
+		var sFormulaEditorLicense = null;
+		var sLicenseCheckMessage = "";
+		if (typeof(document.getElementById("hdnFormulaEditorLicense")) != "undefined" && document.getElementById("hdnFormulaEditorLicense") != null)
+		{
+			sFormulaEditorLicense = document.getElementById("hdnFormulaEditorLicense").value;
+		}
+		//IF A LICENSE KEY VALUE WAS FOUND
+		if (sFormulaEditorLicense != null && sFormulaEditorLicense.trim() != "")
+		{
+			fetch("https://www.enhancedformulaeditor.com/subscription-check.php", {
+				method: "POST",
+				headers: {
+					Accept: "application/json",
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({
+					key: sFormulaEditorLicense
+				}),
+			})
+			.then((response) => response.json())
+			.then(function (data)
+			{
+				if (
+					data.success
+				)
+				{
+					FormulaEditAreaInit();
+				}
+				else
+				{
+					eStatusMessage.html("<b>Enhanced Formula Editor Extension</b><br>Invalid License Key<br><a href='https://www.enhancedformulaeditor.com/purchase.php' target='_blank' class='btn' style='margin: 10px 0 0px 0; display: inline-block; text-decoration: none;'>Learn More</a>");
+					eStatusMessage.show();
+				}
+			})
+			.catch(function (err)
+			{
+				eStatusMessage.html("<b>Enhanced Formula Editor Extension</b><br>License Check Error<br><a href='https://www.enhancedformulaeditor.com/purchase.php' target='_blank' class='btn' style='margin: 10px 0 0px 0; display: inline-block; text-decoration: none;'>Learn More</a>");
+				eStatusMessage.show();
+			});
+		}
+		else
+		{
+			var dtCurrentDate = new Date();
+			var dtGooglePaymentDeprecationDate = new Date(2021, 1, 1); //FEBRUARY 1ST, 2021
+			if (dtCurrentDate < dtGooglePaymentDeprecationDate)
+			{
+				eStatusMessage.html("<b>Enhanced Formula Editor Extension - News</b><br>Google is deprecating their Chrome extension payments system February 1st, 2021. A new subscription must be setup through the www.enhancedformulaeditor.com website. If a subscription is not setup before the date arrives then the Enhanced Formula Editor extension will stop working on that date.<br><a href='https://www.enhancedformulaeditor.com/purchase.php' target='_blank' class='btn' style='margin: 10px 0 0px 0; display: inline-block; text-decoration: none;'>Learn More</a>");
+				eStatusMessage.show();
+			}
+			else
+			{
+				eStatusMessage.html("<b>Enhanced Formula Editor Extension</b><br>A subscription license key must be entered to use this extension's features.<br><a href='https://www.enhancedformulaeditor.com/purchase.php' target='_blank' class='btn' style='margin: 10px 0 0px 0; display: inline-block; text-decoration: none;'>Learn More</a>");
+				eStatusMessage.show();
+			}
+		}
+	}
+	else
+	{
+		FormulaEditAreaInit();
+	}
+	
+	function FormulaEditAreaInit()
+	{
+		editAreaLoader.init({
 		id: oFormulaEditorSettings.TextAreaId	// id of the textarea to transform		
 		,start_highlight: true	// if start with highlight
 		,allow_resize: "both"
@@ -153,6 +225,7 @@ function ActivateEditor(oFormulaEditorSettings)
 		,display: oFormulaEditorSettings.TextAreaEditorDisplay
 		,is_editable: oFormulaEditorSettings.TextAreaEditorEditable
 	});
+	}
 }
 
 

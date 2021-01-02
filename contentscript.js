@@ -52,11 +52,28 @@ function init() {
 				
 				function jsforceScriptLoaded()
 				{
-					var activate = document.createElement("script");
-					activate.type = "text/javascript";
-					activate.src = chrome.extension.getURL("activate_editor.js");
-					activate.charset = "UTF-8";
-					document.getElementsByTagName("head")[0].appendChild(activate);
+					//GET THE STORAGE SYNC VALUE HERE IN THE CONTENT SCRIPT BECAUSE WE CAN'T USE THE STORAGE API FROM
+					//WITHIN THE PAGE ITSELF
+					chrome.storage.sync.get(['FormulaEditorLicense'], function(result)
+					{
+						//console.log('Value currently is ' + result.FormulaEditorLicense);
+						
+						//ADD THE VALUE TO THE TRUE PAGE IN A HIDDEN FIELD SO WE CAN ACCESS IT,
+						//CONTENT SCRIPT CAN'T SET/ACCESS WINDOW VARIABLES
+						var hdnLicense = document.createElement("input");
+						hdnLicense.type = "hidden";
+						hdnLicense.id = "hdnFormulaEditorLicense";
+						hdnLicense.value = result.FormulaEditorLicense;
+						document.getElementsByTagName("body")[0].appendChild(hdnLicense);
+						
+						var activate = document.createElement("script");
+						activate.type = "text/javascript";
+						activate.src = chrome.extension.getURL("activate_editor.js");
+						activate.charset = "UTF-8";
+						document.getElementsByTagName("head")[0].appendChild(activate);
+					});
+					
+					
 				}
 			}
 		}
