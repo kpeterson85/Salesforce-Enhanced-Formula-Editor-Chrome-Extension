@@ -195,7 +195,7 @@ function ActivateEditor(oFormulaEditorSettings)
 		else
 		{
 			var dtCurrentDate = new Date();
-			var dtGooglePaymentDeprecationDate = new Date(2020, 1, 1); //FEBRUARY 1ST, 2021
+			var dtGooglePaymentDeprecationDate = new Date(2021, 1, 1); //FEBRUARY 1ST, 2021
 			if (dtCurrentDate < dtGooglePaymentDeprecationDate)
 			{
 				eStatusMessage.html("<b>Enhanced Formula Editor Extension - Action Required</b><br>Google is eliminating their Chrome extension payment system February 1st, 2021. A new subscription must be setup through the www.enhancedformulaeditor.com website and a license key entered on the extension options page. If a subscription is not setup by then, the Enhanced Formula Editor extension will stop working at that time.<br>" + sGetLicenseKeyButton + sOptionsButton);
