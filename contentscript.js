@@ -52,8 +52,16 @@ function init() {
 				
 				function jsforceScriptLoaded()
 				{
+					//FOR TESTING USERS WITH STORAGE VALUE UNDEFINED
+					/*
+					chrome.storage.sync.remove(['FormulaEditorLicense'], function()
+					{
+						console.log("removed");
+					});
+					*/
+					
 					//GET THE STORAGE SYNC VALUE HERE IN THE CONTENT SCRIPT BECAUSE WE CAN'T USE THE STORAGE API FROM
-					//WITHIN THE PAGE ITSELF
+					//WITHIN THE PAGE ITSELF					
 					chrome.storage.sync.get(['FormulaEditorLicense'], function(result)
 					{
 						//console.log('Value currently is ' + result.FormulaEditorLicense);
@@ -63,7 +71,10 @@ function init() {
 						var hdnLicense = document.createElement("input");
 						hdnLicense.type = "hidden";
 						hdnLicense.id = "hdnFormulaEditorLicense";
-						hdnLicense.value = result.FormulaEditorLicense;
+						if (typeof(result.FormulaEditorLicense) != "undefined")
+						{
+							hdnLicense.value = result.FormulaEditorLicense;
+						}
 						document.getElementsByTagName("body")[0].appendChild(hdnLicense);
 						
 						var sOptionsUrl = chrome.extension.getURL("options.html");

@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', function()
 					data.success
 				)
 				{
-					document.getElementById("status").innerHTML = "Subscription license key validated successfully!";
+					document.getElementById("status").innerHTML = "Subscription license key validated successfully!<br><br>You may need to refresh Salesforce formula pages for the update to take effect.";
 					document.getElementById("status").classList.remove("error");
 					document.getElementById("status").classList.add("success");
 					document.getElementById("status").style.display = "block";
