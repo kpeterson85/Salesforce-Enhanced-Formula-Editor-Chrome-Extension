@@ -153,13 +153,15 @@ function ActivateEditor(oFormulaEditorSettings)
 			sFormulaEditorLicense = document.getElementById("hdnFormulaEditorLicense").value;
 		}
 		
-		var sLearnMoreButton = "<a href='https://www.enhancedformulaeditor.com/purchase.php' target='_blank' class='btn' style='margin: 10px 5px 0px 0; display: inline-block; text-decoration: none;'>Learn More</a>";
+		var sGetLicenseKeyButton = "<a href='https://www.enhancedformulaeditor.com/install.php' target='_blank' class='btn' style='margin: 10px 5px 0px 0; display: inline-block; text-decoration: none;'>Get a License Key</a>";
 		var sOptionsButton = "<a href='" + sOptionsURL + "' target='_blank' class='btn' style='margin: 10px 5px 0px 0; display: inline-block; text-decoration: none;'>Extension Options</a>";
+		var sManageSubscriptionButton = "<a href='https://www.enhancedformulaeditor.com/subscription.php' target='_blank' class='btn' style='margin: 10px 5px 0px 0; display: inline-block; text-decoration: none;'>Manage Subscription</a>";
 		
 		//IF A LICENSE KEY VALUE WAS FOUND
 		if (sFormulaEditorLicense != null && sFormulaEditorLicense.trim() != "")
 		{
-			fetch("https://www.enhancedformulaeditor.com/subscription-check.php", {
+			fetch("https://www.enhancedformulaeditor.com/subscription-check.php",
+			{
 				method: "POST",
 				headers: {
 					Accept: "application/json",
@@ -180,13 +182,13 @@ function ActivateEditor(oFormulaEditorSettings)
 				}
 				else
 				{
-					eStatusMessage.html("<b>Enhanced Formula Editor Extension - Action Required</b><br>The subscription license key entered is either not valid or the subscription is not active.<br>" + sLearnMoreButton + sOptionsButton);
+					eStatusMessage.html("<b>Enhanced Formula Editor Extension - Action Required</b><br>The subscription license key entered on the extension options page is either not valid or the subscription is not active.<br>" + sGetLicenseKeyButton + sManageSubscriptionButton + sOptionsButton);
 					eStatusMessage.show();
 				}
 			})
 			.catch(function (err)
 			{
-				eStatusMessage.html("<b>Enhanced Formula Editor Extension</b><br>An error occurred validating the subscription license key.<br>" + sLearnMoreButton + sOptionsButton);
+				eStatusMessage.html("<b>Enhanced Formula Editor Extension</b><br>An error occurred validating the subscription license key.<br>" + sGetLicenseKeyButton + sManageSubscriptionButton + sOptionsButton);
 				eStatusMessage.show();
 			});
 		}
@@ -196,13 +198,13 @@ function ActivateEditor(oFormulaEditorSettings)
 			var dtGooglePaymentDeprecationDate = new Date(2020, 1, 1); //FEBRUARY 1ST, 2021
 			if (dtCurrentDate < dtGooglePaymentDeprecationDate)
 			{
-				eStatusMessage.html("<b>Enhanced Formula Editor Extension - Action Required</b><br>Google is eliminating their Chrome extension payment system February 1st, 2021. A new subscription must be setup through the www.enhancedformulaeditor.com website and a license key entered on the extension options page. If a subscription is not setup by then, the Enhanced Formula Editor extension will stop working at that time.<br>" + sLearnMoreButton + sOptionsButton);
+				eStatusMessage.html("<b>Enhanced Formula Editor Extension - Action Required</b><br>Google is eliminating their Chrome extension payment system February 1st, 2021. A new subscription must be setup through the www.enhancedformulaeditor.com website and a license key entered on the extension options page. If a subscription is not setup by then, the Enhanced Formula Editor extension will stop working at that time.<br>" + sGetLicenseKeyButton + sOptionsButton);
 				eStatusMessage.show();
 				FormulaEditAreaInit();
 			}
 			else
 			{
-				eStatusMessage.html("<b>Enhanced Formula Editor Extension - Action Required</b><br>A subscription license key must be entered to use this extension's features.<br>" + sLearnMoreButton + sOptionsButton);
+				eStatusMessage.html("<b>Enhanced Formula Editor Extension - Action Required</b><br>A subscription license key must be entered on the extension options page to use this extension's features.<br>" + sGetLicenseKeyButton + sOptionsButton);
 				eStatusMessage.show();
 			}
 		}
