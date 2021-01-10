@@ -15,10 +15,21 @@ document.addEventListener('DOMContentLoaded', function()
 	{
 		var sKey = document.getElementById("license").value;
 		
-		chrome.storage.sync.set({'FormulaEditorLicense': sKey}, function()
+		if (sKey.trim() != "")
 		{
-			//console.log('Value is set to ' + value);
-		});
+			chrome.storage.sync.set({'FormulaEditorLicense': sKey}, function()
+			{
+				//console.log('Value is set to ' + value);
+			});
+		}
+		else
+		{
+			chrome.storage.sync.remove(['FormulaEditorLicense'], function()
+			{
+				//console.log("removed");
+			});
+		}
+		
 		
 		if (sKey.trim() != "")
 		{

@@ -51,15 +51,7 @@ function init() {
 				document.getElementsByTagName("head")[0].appendChild(jsforceScript);
 				
 				function jsforceScriptLoaded()
-				{
-					//FOR TESTING USERS WITH STORAGE VALUE UNDEFINED
-					/*
-					chrome.storage.sync.remove(['FormulaEditorLicense'], function()
-					{
-						console.log("removed");
-					});
-					*/
-					
+				{					
 					//GET THE STORAGE SYNC VALUE HERE IN THE CONTENT SCRIPT BECAUSE WE CAN'T USE THE STORAGE API FROM
 					//WITHIN THE PAGE ITSELF					
 					chrome.storage.sync.get(['FormulaEditorLicense'], function(result)
