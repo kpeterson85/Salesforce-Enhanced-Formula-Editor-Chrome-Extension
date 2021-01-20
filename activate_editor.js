@@ -198,13 +198,13 @@ function ActivateEditor(oFormulaEditorSettings)
 			var dtGooglePaymentDeprecationDate = new Date(2021, 1, 1); //FEBRUARY 1ST, 2021
 			if (dtCurrentDate < dtGooglePaymentDeprecationDate)
 			{
-				eStatusMessage.html("<b>Enhanced Formula Editor Extension - Action Required</b><br>Google is eliminating their Chrome extension payment system February 1st, 2021. A new subscription must be setup through the www.enhancedformulaeditor.com website and a license key entered on the extension options page. If a subscription is not setup by then, the Enhanced Formula Editor extension will stop working at that time.<br>" + sGetLicenseKeyButton + sOptionsButton);
+				eStatusMessage.html("<b>Enhanced Formula Editor Extension - Action Required</b><br>Google is eliminating their Chrome extension payment system February 1st, 2021 which has required changes to this extension. A new subscription must be set up before February 1st, 2021 by clicking the 'Get a License Key' button below and following the 3-step process. Otherwise, the extension will stop working at that time.<br><br>Even if you previously had a subscription through the Google Chrome Web Store, you must set up a new subscription by clicking the 'Get a License Key' button below and following the 3-step process since the new setup uses a license key while the previous Google system did not.<br>" + sGetLicenseKeyButton + sOptionsButton);
 				eStatusMessage.show();
 				FormulaEditAreaInit();
 			}
 			else
 			{
-				eStatusMessage.html("<b>Enhanced Formula Editor Extension - Action Required</b><br>A subscription license key must be entered on the extension options page to use this extension's features.<br>" + sGetLicenseKeyButton + sOptionsButton);
+				eStatusMessage.html("<b>Enhanced Formula Editor Extension - Action Required</b><br>A subscription must be set up by clicking the 'Get a License Key' button below and following the 3-step process.<br><br>Even if you previously had a subscription through the Google Chrome Web Store, you must set up a new subscription by clicking the 'Get a License Key' button below and following the 3-step process since the new setup uses a license key while the previous Google system did not.<br>" + sGetLicenseKeyButton + sOptionsButton);
 				eStatusMessage.show();
 			}
 		}
