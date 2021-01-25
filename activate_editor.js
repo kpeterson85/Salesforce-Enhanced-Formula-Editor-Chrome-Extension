@@ -721,7 +721,7 @@ function UpdateFieldDetails($fieldTR, sObjectLookupFieldName, sObjectName, iFiel
 	}
 	else if (oFieldDescribe.picklistValues.length > 0)
 	{
-		$detailsTable.append("<tr><td>Picklist Values</td><td><table class='list picklistValues'><tr class='headerRow'><th>Value</th><th>Label</th><th>Default</th></tr></table></td></tr>");
+		$detailsTable.append("<tr><td>Picklist Values</td><td><table class='list picklistValues'><tr class='headerRow'><th>API Name</th><th>Label</th><th>Default</th></tr></table></td></tr>");
 		var $picklistTable = $detailsTable.find("table.picklistValues");
 		
 		for (var v = 0; v < oFieldDescribe.picklistValues.length; v++)
