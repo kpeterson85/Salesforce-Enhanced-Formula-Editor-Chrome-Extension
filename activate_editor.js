@@ -204,7 +204,7 @@ function ActivateEditor(oFormulaEditorSettings)
 			}
 			else
 			{
-				eStatusMessage.html("<b>Enhanced Formula Editor Extension - Action Required</b><br>A subscription must be set up by clicking the 'Get a License Key' button below and following the 3-step process.<br><br>Even if you previously had a subscription through the Google Chrome Web Store, you must set up a new subscription by clicking the 'Get a License Key' button below and following the 3-step process since the new setup uses a license key while the previous Google system did not.<br>" + sGetLicenseKeyButton + sOptionsButton);
+				eStatusMessage.html("<b>Enhanced Formula Editor Extension - Action Required</b><br>This extension requires a subscription license key as of February 1st, 2021. Click the 'Get a License Key' button below and follow the 3-step process to get started (includes a 14-day free trial).<br><br>If you previously had a subscription through the Google Chrome Web Store, you must still set up a new subscription in order to get a license key.<br>" + sGetLicenseKeyButton + sOptionsButton);
 				eStatusMessage.show();
 			}
 		}
