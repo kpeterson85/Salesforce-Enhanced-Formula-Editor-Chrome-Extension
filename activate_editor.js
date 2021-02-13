@@ -35,7 +35,7 @@ if (elements.length == 1)
 			var oFormulaEditorSettings = {
 				TextAreaId: sId,
 				TextAreaEditorStartHeight: 400,
-				TextAreaEditorStartWidth: 600,
+				TextAreaEditorStartWidth: 650,
 				TextAreaEditorDisplay: "onload",	
 				TextAreaEditorEditable: true,
 				TextAreaEditorResizedCallback: "FormulaEditAreaResized",
@@ -102,7 +102,7 @@ function ActivateEditor(oFormulaEditorSettings)
 		TextAreaId: "",
 		TextAreaEditorStartHeight: 400,
 		TextAreaEditorMinHeight: 250,
-		TextAreaEditorStartWidth: 600,
+		TextAreaEditorStartWidth: 650,
 		TextAreaEditorMinWidth: 500,
 		TextAreaEditorDisplay: "onload",
 		TextAreaEditorEditable: true,
