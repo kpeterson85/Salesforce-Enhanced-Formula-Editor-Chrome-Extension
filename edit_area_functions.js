@@ -696,7 +696,7 @@
 		if(allow){
 			
 			resize.style.visibility="visible";
-			parent.editAreaLoader.add_event(resize, "mouseup", editArea.start_resize);
+			parent.editAreaLoader.add_event(resize, "mousedown", editArea.start_resize);
 		}else{
 			resize.style.visibility="hidden";
 			parent.editAreaLoader.remove_event(resize, "mouseup", editArea.start_resize);
