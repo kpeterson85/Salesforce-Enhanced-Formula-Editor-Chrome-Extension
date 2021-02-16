@@ -164,8 +164,8 @@ function ActivateEditor(oFormulaEditorSettings)
 			{
 				method: "POST",
 				headers: {
-					Accept: "application/json",
-					"Content-Type": "application/json",
+					Accept: "text/plain", //use text/plain instead of application/json to avoid preflight CORS request https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS
+					"Content-Type": "text/plain",
 				},
 				body: JSON.stringify({
 					key: sFormulaEditorLicense
