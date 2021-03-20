@@ -155,86 +155,7 @@ function ActivateEditor(oFormulaEditorSettings)
 		sFontSize = localStorage['FormulaEditorFontSize'];
 	}
 	
-	var bLoadEditor = false;
-	
-	//IF LOADING THE MAIN INSTANCE ON THE PAGE THEN DO THE LICENSE CHECK
-	if (oFormulaEditorSettings.OverrideInsertButtons == true)
-	{
-		var eStatusMessage = editorJQuery("<div class='formulaEditorStatus' style='display: none; color: #856404; background-color: #fff3cd; border: 1px solid #ffe699; padding: 10px 15px; margin: 5px 5px 5px 0; line-height: 1.5;'></div>");
-		editorJQuery("#" + oFormulaEditorSettings.TextAreaId).before(eStatusMessage);
-		
-		var sOptionsURL = "";
-		if (typeof(document.getElementById("hdnFormulaEditorOptionsURL")) != "undefined" && document.getElementById("hdnFormulaEditorOptionsURL") != null)
-		{
-			sOptionsURL = document.getElementById("hdnFormulaEditorOptionsURL").value;
-		}
-		
-		var sFormulaEditorLicense = null;
-		if (typeof(document.getElementById("hdnFormulaEditorLicense")) != "undefined" && document.getElementById("hdnFormulaEditorLicense") != null)
-		{
-			sFormulaEditorLicense = document.getElementById("hdnFormulaEditorLicense").value;
-		}
-		
-		var sGetLicenseKeyButton = "<a href='https://www.enhancedformulaeditor.com/install.php' target='_blank' class='btn' style='margin: 10px 5px 0px 0; display: inline-block; text-decoration: none;'>Get a License Key</a>";
-		var sOptionsButton = "<a href='" + sOptionsURL + "' target='_blank' class='btn' style='margin: 10px 5px 0px 0; display: inline-block; text-decoration: none;'>Extension Options</a>";
-		var sManageSubscriptionButton = "<a href='https://www.enhancedformulaeditor.com/subscription.php' target='_blank' class='btn' style='margin: 10px 5px 0px 0; display: inline-block; text-decoration: none;'>Manage Subscription</a>";
-		
-		//IF A LICENSE KEY VALUE WAS FOUND
-		if (sFormulaEditorLicense != null && sFormulaEditorLicense.trim() != "")
-		{
-			fetch("https://www.enhancedformulaeditor.com/subscription-check.php",
-			{
-				method: "POST",
-				headers: {
-					Accept: "text/plain", //use text/plain instead of application/json to avoid preflight CORS request https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS
-					"Content-Type": "text/plain",
-				},
-				body: JSON.stringify({
-					key: sFormulaEditorLicense
-				}),
-			})
-			.then((response) => response.json())
-			.then(function (data)
-			{
-				if (
-					data.success
-				)
-				{
-					FormulaEditAreaInit();
-				}
-				else
-				{
-					eStatusMessage.html("<b>Enhanced Formula Editor Extension - Action Required</b><br>The subscription license key entered on the extension options page is either not valid or the subscription is not active.<br>" + sGetLicenseKeyButton + sManageSubscriptionButton + sOptionsButton);
-					eStatusMessage.show();
-				}
-			})
-			.catch(function (err)
-			{
-				eStatusMessage.html("<b>Enhanced Formula Editor Extension</b><br>An error occurred validating the subscription license key.<br>" + sGetLicenseKeyButton + sManageSubscriptionButton + sOptionsButton);
-				eStatusMessage.show();
-			});
-		}
-		else
-		{
-			var dtCurrentDate = new Date();
-			var dtGooglePaymentDeprecationDate = new Date(2021, 1, 1); //FEBRUARY 1ST, 2021
-			if (dtCurrentDate < dtGooglePaymentDeprecationDate)
-			{
-				eStatusMessage.html("<b>Enhanced Formula Editor Extension - Action Required</b><br>Google is eliminating their Chrome extension payment system February 1st, 2021 which has required changes to this extension. A new subscription must be set up before February 1st, 2021 by clicking the 'Get a License Key' button below and following the 3-step process. Otherwise, the extension will stop working at that time.<br><br>Even if you previously had a subscription through the Google Chrome Web Store, you must set up a new subscription by clicking the 'Get a License Key' button below and following the 3-step process since the new setup uses a license key while the previous Google system did not.<br>" + sGetLicenseKeyButton + sOptionsButton);
-				eStatusMessage.show();
-				FormulaEditAreaInit();
-			}
-			else
-			{
-				eStatusMessage.html("<b>Enhanced Formula Editor Extension - Action Required</b><br>This extension requires a subscription license key as of February 1st, 2021. Click the 'Get a License Key' button below and follow the 3-step process to get started (includes a 14-day free trial).<br><br>If you previously had a subscription through the Google Chrome Web Store, you must still set up a new subscription in order to get a license key.<br>" + sGetLicenseKeyButton + sOptionsButton);
-				eStatusMessage.show();
-			}
-		}
-	}
-	else
-	{
-		FormulaEditAreaInit();
-	}
+	FormulaEditAreaInit();
 	
 	function FormulaEditAreaInit()
 	{
@@ -384,7 +305,7 @@ function FormulaEditAreaLoaded(sTextAreaId)
   
   var sCustomButtonLeft = "0";
   
-  //SETUP THE SAVE BUTTON FOR POPUP WINDOW EDITORS (FLOWS)
+  //SETUP THE SAVE BUTTON FOR POPUP WINDOW EDITORS (PROCESS BUILDERS, FLOWS)
   //FIND THE EDITOR AND INJECT THE BUTTON, THE EDITOR IFRAME IS ALWAYS RIGHT AFTER THE TEXT AREA
   if (oFormulaEditorSettings.Popup == true)
   {
@@ -398,14 +319,18 @@ function FormulaEditAreaLoaded(sTextAreaId)
 	  sCustomButtonLeft = "40";
   }  
   
-  //SETUP THE FORMAT BUTTON
-  //FIND THE EDITOR AND INJECT THE FORMAT BUTTON, THE EDITOR IFRAME IS ALWAYS RIGHT AFTER THE TEXT AREA
-  var $formatButton = editorJQuery("<input type='button' value='Format' class='btnFormaFormula' style='position: absolute; left: " + sCustomButtonLeft + "px; margin: 1px 0 0 2px; padding: 0 2px;' />");
-  $formatButton.click(function()
+  //DON'T PROVIDE THE FORMAT BUTTON FOR POPUP EDITORS (PROCESS BUILDER, FLOWS) UNTIL WE HAVE TESTED IT MORE
+  if (oFormulaEditorSettings.Popup == false)
   {
-    formatFormula(sTextAreaId);
-  });
-  editorJQuery("#" + sTextAreaId).next("iframe").contents().find("#toolbar_1").prepend($formatButton);
+	  //SETUP THE FORMAT BUTTON
+	  //FIND THE EDITOR AND INJECT THE FORMAT BUTTON, THE EDITOR IFRAME IS ALWAYS RIGHT AFTER THE TEXT AREA
+	  var $formatButton = editorJQuery("<input type='button' value='Format' class='btnFormaFormula' style='position: absolute; left: " + sCustomButtonLeft + "px; margin: 1px 0 0 2px; padding: 0 2px;' />");
+	  $formatButton.click(function()
+	  {
+		formatFormula(sTextAreaId);
+	  });
+	  editorJQuery("#" + sTextAreaId).next("iframe").contents().find("#toolbar_1").prepend($formatButton);
+  }
 }
 
 function FormulaEditAreaResized(sTextAreaId)

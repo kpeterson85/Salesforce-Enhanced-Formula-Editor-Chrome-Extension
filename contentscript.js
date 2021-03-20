@@ -21,7 +21,7 @@ function init() {
 	//with the same id's as above so we must specify that it's a text area
 	if (sId != "" && document.getElementById(sId).tagName == "TEXTAREA")
 	{
-		LoadEditorFiles(document);
+		LoadEditorFiles(document, document.getElementById(sId));
 	}
 	else if (document.location.pathname.indexOf("flowBuilder.app") != -1 || document.location.pathname.indexOf("processui.app") != -1)
 	{
@@ -81,7 +81,8 @@ function init() {
 										var popupTextarea = document.createElement("textarea");
 										popupTextarea.id = "CalculatedFormula";
 										popupTextarea.value = btn.editorField.value;
-										popupTextarea.setAttribute("data-editor-popup", "true");						
+										popupTextarea.setAttribute("data-editor-popup", "true");
+										popupTextarea.setAttribute("style", "width: 100%; height: 100%;");
 										newWin.document.body.appendChild(popupTextarea);
 										
 										newWin.editorField = btn.editorField;
@@ -90,7 +91,10 @@ function init() {
 										newWin.addEventListener("message", function(event)
 										{
 										  //receive the postmessage from the popup window (sent from activate_editor) which contains the updated formula
-										  newWin.editorField.value = event.data;										  
+										  newWin.editorField.value = event.data;
+										  
+										  //TRIGGER THE NATIVE CHANGE EVENT ON THE FIELD SO OTHER SALESFORCE FEATURES PICK UP ON THE CHANGE AND THE NEW CONTENT GETS SAVED
+										  newWin.editorField.dispatchEvent(new Event('change'));
 										  
 										  newWin.close();
 										});
@@ -100,7 +104,7 @@ function init() {
 										   this.btn.popup = null;
 										}, false);
 
-										LoadEditorFiles(newWin.document);
+										LoadEditorFiles(newWin.document, popupTextarea);
 									}
 									else
 									{
@@ -127,74 +131,138 @@ function init() {
 		
 	}
 	
-	function LoadEditorFiles(elDocument)
+	function LoadEditorFiles(elDocument, elTextField)
 	{
-		var hiddenBaseURL = elDocument.createElement("input")
-		hiddenBaseURL.id = "ForceFormulaEditorBaseURL";
-		hiddenBaseURL.type = "hidden";
-		hiddenBaseURL.value = chrome.extension.getURL("");
-		if (elDocument.getElementsByTagName("body").length == 0)
+		//GET THE STORAGE SYNC VALUE HERE IN THE CONTENT SCRIPT BECAUSE WE CAN'T USE THE STORAGE API FROM
+		//WITHIN THE PAGE ITSELF					
+		chrome.storage.sync.get(['FormulaEditorLicense'], function(result)
 		{
-			elDocument.getElementsByTagName("html")[0].appendChild(elDocument.createElement("body"))
-		}
-		elDocument.getElementsByTagName("body")[0].appendChild(hiddenBaseURL);				
-		
-		var loader = elDocument.createElement("script");
-		loader.type = "text/javascript";
-		loader.src = chrome.extension.getURL("edit_area_loader.js");
-		loader.charset = "UTF-8";
-		loader.onload = loaderLoaded;
-		elDocument.getElementsByTagName("head")[0].appendChild(loader);		
-
-		function loaderLoaded()
-		{								
-			var jqueryScript = elDocument.createElement("script");
-			jqueryScript.type = "text/javascript";
-			jqueryScript.src = chrome.extension.getURL("jquery.min.js");
-			jqueryScript.charset = "UTF-8";
-			elDocument.getElementsByTagName("head")[0].appendChild(jqueryScript);
+			//console.log('Value currently is ' + result.FormulaEditorLicense);
 			
-			var jsforceScript = elDocument.createElement("script");
-			jsforceScript.type = "text/javascript";
-			jsforceScript.src = chrome.extension.getURL("jsforce-core.min.js");
-			jsforceScript.charset = "UTF-8";
-			jsforceScript.onload = jsforceScriptLoaded;
-			elDocument.getElementsByTagName("head")[0].appendChild(jsforceScript);
-			
-			function jsforceScriptLoaded()
+			//ADD THE VALUE TO THE TRUE PAGE IN A HIDDEN FIELD SO WE CAN ACCESS IT,
+			//CONTENT SCRIPT CAN'T SET/ACCESS WINDOW VARIABLES
+			var hdnLicense = elDocument.createElement("input");
+			hdnLicense.type = "hidden";
+			hdnLicense.id = "hdnFormulaEditorLicense";
+			if (typeof(result.FormulaEditorLicense) != "undefined")
 			{
-				//GET THE STORAGE SYNC VALUE HERE IN THE CONTENT SCRIPT BECAUSE WE CAN'T USE THE STORAGE API FROM
-				//WITHIN THE PAGE ITSELF					
-				chrome.storage.sync.get(['FormulaEditorLicense'], function(result)
+				hdnLicense.value = result.FormulaEditorLicense;
+			}
+			elDocument.getElementsByTagName("body")[0].appendChild(hdnLicense);
+			
+			var sOptionsUrl = chrome.extension.getURL("options.html");
+			var hdnOptionsURL = elDocument.createElement("input");
+			hdnOptionsURL.type = "hidden";
+			hdnOptionsURL.id = "hdnFormulaEditorOptionsURL";
+			hdnOptionsURL.value = sOptionsUrl;
+			elDocument.getElementsByTagName("body")[0].appendChild(hdnOptionsURL);						
+			
+			var eStatusMessage = elDocument.createElement("div");
+			eStatusMessage.setAttribute("class", "formulaEditorStatus");
+			eStatusMessage.setAttribute("style", "display: none; font-family: Arial; font-size: 12px; color: #856404; background-color: #fff3cd; border: 1px solid #ffe699; padding: 10px 15px; margin: 5px 5px 5px 0; line-height: 1.5;");
+			elTextField.before(eStatusMessage);
+			
+			var sOptionsURL = "";
+			if (typeof(elDocument.getElementById("hdnFormulaEditorOptionsURL")) != "undefined" && elDocument.getElementById("hdnFormulaEditorOptionsURL") != null)
+			{
+				sOptionsURL = elDocument.getElementById("hdnFormulaEditorOptionsURL").value;
+			}
+			
+			var sFormulaEditorLicense = null;
+			if (typeof(elDocument.getElementById("hdnFormulaEditorLicense")) != "undefined" && elDocument.getElementById("hdnFormulaEditorLicense") != null)
+			{
+				sFormulaEditorLicense = elDocument.getElementById("hdnFormulaEditorLicense").value;
+			}
+			
+			var sGetLicenseKeyButton = "<a href='https://www.enhancedformulaeditor.com/install.php' target='_blank' class='btn' style='color: #000; font-weight: normal; margin: 10px 5px 0px 0; display: inline-block; text-decoration: none; border: 1px solid #b5b5b5; background: #f3f2f2; border-radius: 3px; padding: 3px 4px;'>Get a License Key</a>";
+			var sOptionsButton = "<a href='" + sOptionsURL + "' target='_blank' class='btn' style='color: #000; font-weight: normal; margin: 10px 5px 0px 0; display: inline-block; text-decoration: none; border: 1px solid #b5b5b5; background: #f3f2f2; border-radius: 3px; padding: 3px 4px;'>Extension Options</a>";
+			var sManageSubscriptionButton = "<a href='https://www.enhancedformulaeditor.com/subscription.php' target='_blank' class='btn' style='color: #000; font-weight: normal; margin: 10px 5px 0px 0; display: inline-block; text-decoration: none; border: 1px solid #b5b5b5; background: #f3f2f2; border-radius: 3px; padding: 3px 4px;'>Manage Subscription</a>";
+			
+			//IF A LICENSE KEY VALUE WAS FOUND
+			if (sFormulaEditorLicense != null && sFormulaEditorLicense.trim() != "")
+			{
+				fetch("https://www.enhancedformulaeditor.com/subscription-check.php",
 				{
-					//console.log('Value currently is ' + result.FormulaEditorLicense);
-					
-					//ADD THE VALUE TO THE TRUE PAGE IN A HIDDEN FIELD SO WE CAN ACCESS IT,
-					//CONTENT SCRIPT CAN'T SET/ACCESS WINDOW VARIABLES
-					var hdnLicense = elDocument.createElement("input");
-					hdnLicense.type = "hidden";
-					hdnLicense.id = "hdnFormulaEditorLicense";
-					if (typeof(result.FormulaEditorLicense) != "undefined")
+					method: "POST",
+					headers: {
+						Accept: "text/plain", //use text/plain instead of application/json to avoid preflight CORS request https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS
+						"Content-Type": "text/plain",
+					},
+					body: JSON.stringify({
+						key: sFormulaEditorLicense
+					}),
+				})
+				.then((response) => response.json())
+				.then(function (data)
+				{
+					if (
+						data.success
+					)
 					{
-						hdnLicense.value = result.FormulaEditorLicense;
+						var hiddenBaseURL = elDocument.createElement("input")
+						hiddenBaseURL.id = "ForceFormulaEditorBaseURL";
+						hiddenBaseURL.type = "hidden";
+						hiddenBaseURL.value = chrome.extension.getURL("");
+						if (elDocument.getElementsByTagName("body").length == 0)
+						{
+							elDocument.getElementsByTagName("html")[0].appendChild(elDocument.createElement("body"))
+						}
+						elDocument.getElementsByTagName("body")[0].appendChild(hiddenBaseURL);				
+						
+						var loader = elDocument.createElement("script");
+						loader.type = "text/javascript";
+						loader.src = chrome.extension.getURL("edit_area_loader.js");
+						loader.charset = "UTF-8";
+						loader.onload = loaderLoaded;
+						elDocument.getElementsByTagName("head")[0].appendChild(loader);		
+
+						function loaderLoaded()
+						{								
+							var jqueryScript = elDocument.createElement("script");
+							jqueryScript.type = "text/javascript";
+							jqueryScript.src = chrome.extension.getURL("jquery.min.js");
+							jqueryScript.charset = "UTF-8";
+							elDocument.getElementsByTagName("head")[0].appendChild(jqueryScript);
+							
+							var jsforceScript = elDocument.createElement("script");
+							jsforceScript.type = "text/javascript";
+							jsforceScript.src = chrome.extension.getURL("jsforce-core.min.js");
+							jsforceScript.charset = "UTF-8";
+							jsforceScript.onload = jsforceScriptLoaded;
+							elDocument.getElementsByTagName("head")[0].appendChild(jsforceScript);
+							
+							function jsforceScriptLoaded()
+							{								
+								var activate = elDocument.createElement("script");
+								activate.type = "text/javascript";
+								activate.src = chrome.extension.getURL("activate_editor.js");
+								activate.charset = "UTF-8";
+								elDocument.getElementsByTagName("head")[0].appendChild(activate);
+							}
+						}
 					}
-					elDocument.getElementsByTagName("body")[0].appendChild(hdnLicense);
-					
-					var sOptionsUrl = chrome.extension.getURL("options.html");
-					var hdnOptionsURL = elDocument.createElement("input");
-					hdnOptionsURL.type = "hidden";
-					hdnOptionsURL.id = "hdnFormulaEditorOptionsURL";
-					hdnOptionsURL.value = sOptionsUrl;
-					elDocument.getElementsByTagName("body")[0].appendChild(hdnOptionsURL);						
-					
-					var activate = elDocument.createElement("script");
-					activate.type = "text/javascript";
-					activate.src = chrome.extension.getURL("activate_editor.js");
-					activate.charset = "UTF-8";
-					elDocument.getElementsByTagName("head")[0].appendChild(activate);
+					else
+					{
+						eStatusMessage.innerHTML = "<b>Enhanced Formula Editor Extension - Action Required</b><br>The subscription license key entered on the extension options page is either not valid or the subscription is not active.<br>" + sGetLicenseKeyButton + sManageSubscriptionButton + sOptionsButton;
+						eStatusMessage.style.display = "block";
+					}
+				})
+				.catch(function (err)
+				{
+					eStatusMessage.innerHTML = "<b>Enhanced Formula Editor Extension</b><br>An error occurred validating the subscription license key.<br>" + sGetLicenseKeyButton + sManageSubscriptionButton + sOptionsButton;
+					eStatusMessage.style.display = "block";
 				});
 			}
-		}
+			else
+			{
+				eStatusMessage.innerHTML = "<b>Enhanced Formula Editor Extension - Action Required</b><br>This extension requires a subscription license key as of February 1st, 2021. Click the 'Get a License Key' button below and follow the 3-step process to get started (includes a 14-day free trial).<br><br>If you previously had a subscription through the Google Chrome Web Store, you must still set up a new subscription in order to get a license key.<br>" + sGetLicenseKeyButton + sOptionsButton;
+				eStatusMessage.style.display = "block";
+			}
+		});			
+		
+		
+		
+		
 	}
 
 }
