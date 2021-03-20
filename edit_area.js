@@ -268,6 +268,34 @@
 			}
 		});
 		
+
+		console.log(document);
+		
+		//======================================
+		//THIS CODE IS ALSY IN edit_area_loader.js
+		//======================================
+		AttachEditorEventHandler("click");
+		AttachEditorEventHandler("mousedown");
+		AttachEditorEventHandler("mouseover");
+		AttachEditorEventHandler("mouseout");
+		AttachEditorEventHandler("change");
+		AttachEditorEventHandler("focus");
+		AttachEditorEventHandler("blur");
+		
+		function AttachEditorEventHandler(sEvent)
+		{
+			var eventElements = document.querySelectorAll("[data-editor-on" + sEvent + "]");
+			console.log(eventElements);
+			for (i = 0; i < eventElements.length; ++i)
+			{
+				eventElements[i].addEventListener(sEvent, function()
+				{
+					eval(this.getAttribute("data-editor-on" + sEvent).replace("return false;", "").replace("return ", ""));
+					
+					return false;
+				});
+			}
+		}
 		
 		/*date= new Date();
 		alert(date.getTime()- parent.editAreaLoader.start_time);*/

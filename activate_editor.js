@@ -1,3 +1,5 @@
+console.log("activate_editor loaded");
+
 editAreaLoader.window_loaded();
 
 var sId = "";
@@ -21,19 +23,32 @@ else if (document.getElementById("ValidationFormula") != null)
 	sObjectElementId = "TableEnumOrId";
 }
 
-var elements = editorJQuery('#' + sId);
-if (elements.length == 1)
+//some pages like 'add formula field' pages have hidden inputs
+//with the same id's as above so we must specify that it's a text area
+if (sId != "" && document.getElementById(sId).tagName == "TEXTAREA")
+{
+	var elements = editorJQuery('#' + sId);
+	if (elements.length == 1)
+	{
+		console.log("Found direct formula field");
+		ActivateWhenTextFieldsVisible(elements[0]);
+	}
+}
+
+function ActivateWhenTextFieldsVisible(eTextfield)
 {
 	var observer = new IntersectionObserver(function(entries)
-	{
+	{		
 		//only activate the editor when the textfield becomes visible the first time indicated by lack of data attached yet
-		if (entries[0].intersectionRatio && typeof(editorJQuery("#" + sId).data("formulaEditorSettings")) == "undefined")
+		if (entries[0].intersectionRatio && typeof(editorJQuery(entries[0].target).data("formulaEditorSettings")) == "undefined")
 		{
 			//don't observe anymore
 			observer.unobserve(entries[0].target);
-		  
+			
+			var parent = entries[0].target.parentNode;
+			
 			var oFormulaEditorSettings = {
-				TextAreaId: sId,
+				TextAreaId: entries[0].target.getAttribute("id"),
 				TextAreaEditorStartHeight: 400,
 				TextAreaEditorStartWidth: 650,
 				TextAreaEditorDisplay: "onload",	
@@ -41,7 +56,8 @@ if (elements.length == 1)
 				TextAreaEditorResizedCallback: "FormulaEditAreaResized",
 				TextAreaEditorFontSizeChangedCallback: "FormulaEditAreaFontSizeChanged",
 				OverrideInsertButtons: true,
-				LoadFieldDetailsAfterSelector: ".formulaFooter"
+				LoadFieldDetailsAfterSelector: ".formulaFooter",
+				ParentElement: parent
 			}
 
 			if (typeof(localStorage['FormulaEditorHeight']) != "undefined")
@@ -51,6 +67,10 @@ if (elements.length == 1)
 			if (typeof(localStorage['FormulaEditorWidth']) != "undefined")
 			{
 				oFormulaEditorSettings.TextAreaEditorStartWidth = parseInt(localStorage['FormulaEditorWidth'], 10);
+			}
+			if (typeof(entries[0].target.getAttribute("data-editor-popup")) != "undefined" && entries[0].target.getAttribute("data-editor-popup") == "true")
+			{
+				oFormulaEditorSettings.Popup = true;
 			}
 
 			//custom objects have their object id in the entity field, standard objects have their object name
@@ -78,9 +98,9 @@ if (elements.length == 1)
 		}
 	},
 	{
-		root: document.body
+		root: eTextfield.parentNode
 	});
-	observer.observe(elements[0]);
+	observer.observe(eTextfield);
 }
 
 var oEditorTooltipStyles = {
@@ -108,6 +128,7 @@ function ActivateEditor(oFormulaEditorSettings)
 		TextAreaEditorEditable: true,
 		TextAreaEditorResizedCallback: "",
 		TextAreaEditorFontSizeChangedCallback: "",
+		Popup: false,
 		ObjectId: "",
 		ObjectAPIName: "",
 		ObjectLabel: "",
@@ -117,15 +138,16 @@ function ActivateEditor(oFormulaEditorSettings)
 		LoadFieldDetailsAfterSelector: "",
 		FieldsShell: null,
 		FieldsTable: null,
-		FieldValuesPreviewInput: null
+		FieldValuesPreviewInput: null,
+		ParentElement: document
 	}
 	
 	oFormulaEditorSettings = editorJQuery.extend(oDefaultSettings, oFormulaEditorSettings);
 	
-	editorJQuery("#" + oFormulaEditorSettings.TextAreaId).data("formulaEditorSettings", oFormulaEditorSettings);
-	editorJQuery("#" + oFormulaEditorSettings.TextAreaId).data("originalFormula", editorJQuery("#" + oFormulaEditorSettings.TextAreaId).val());
-	editorJQuery("#" + oFormulaEditorSettings.TextAreaId).width(oFormulaEditorSettings.TextAreaEditorStartWidth);
-	editorJQuery("#" + oFormulaEditorSettings.TextAreaId).height(oFormulaEditorSettings.TextAreaEditorStartHeight);
+	editorJQuery("#" + oFormulaEditorSettings.TextAreaId, oFormulaEditorSettings.ParentElement).data("formulaEditorSettings", oFormulaEditorSettings);
+	editorJQuery("#" + oFormulaEditorSettings.TextAreaId, oFormulaEditorSettings.ParentElement).data("originalFormula", editorJQuery("#" + oFormulaEditorSettings.TextAreaId, oFormulaEditorSettings.ParentElement).val());
+	editorJQuery("#" + oFormulaEditorSettings.TextAreaId, oFormulaEditorSettings.ParentElement).width(oFormulaEditorSettings.TextAreaEditorStartWidth);
+	editorJQuery("#" + oFormulaEditorSettings.TextAreaId, oFormulaEditorSettings.ParentElement).height(oFormulaEditorSettings.TextAreaEditorStartHeight);
 	
 	var sFontSize = "8";
 	if (typeof(localStorage['FormulaEditorFontSize']) != "undefined")
@@ -217,32 +239,34 @@ function ActivateEditor(oFormulaEditorSettings)
 	function FormulaEditAreaInit()
 	{
 		editAreaLoader.init({
-		id: oFormulaEditorSettings.TextAreaId	// id of the textarea to transform		
-		,start_highlight: true	// if start with highlight
-		,allow_resize: "both"
-		,allow_toggle: true
-		,word_wrap: false
-		,language: "en"
-		,syntax: "forceformula"
-		,replace_tab_by_spaces: 2
-		,font_size: sFontSize
-		,font_family: "verdana, monospace"
-		,min_height: oFormulaEditorSettings.TextAreaEditorMinHeight
-		,min_width: oFormulaEditorSettings.TextAreaEditorMinWidth		
-		,show_line_colors: true
-		,EA_load_callback: "FormulaEditAreaLoaded"
-		,EA_resized_callback: oFormulaEditorSettings.TextAreaEditorResizedCallback
-		,EA_font_size_changed_callback: oFormulaEditorSettings.TextAreaEditorFontSizeChangedCallback
-		,display: oFormulaEditorSettings.TextAreaEditorDisplay
-		,is_editable: oFormulaEditorSettings.TextAreaEditorEditable
-	});
+			id: oFormulaEditorSettings.TextAreaId	// id of the textarea to transform		
+			,start_highlight: true	// if start with highlight
+			,allow_resize: "both"
+			,allow_toggle: true
+			,word_wrap: false
+			,language: "en"
+			,syntax: "forceformula"
+			,replace_tab_by_spaces: 2
+			,font_size: sFontSize
+			,font_family: "verdana, monospace"
+			,min_height: oFormulaEditorSettings.TextAreaEditorMinHeight
+			,min_width: oFormulaEditorSettings.TextAreaEditorMinWidth		
+			,show_line_colors: true
+			,EA_load_callback: "FormulaEditAreaLoaded"
+			,EA_resized_callback: oFormulaEditorSettings.TextAreaEditorResizedCallback
+			,EA_font_size_changed_callback: oFormulaEditorSettings.TextAreaEditorFontSizeChangedCallback
+			,display: oFormulaEditorSettings.TextAreaEditorDisplay
+			,is_editable: oFormulaEditorSettings.TextAreaEditorEditable
+			,parent: oFormulaEditorSettings.ParentElement
+			,fullscreen: oFormulaEditorSettings.Popup
+		});
 	}
 }
 
 
 function FormulaEditAreaLoaded(sTextAreaId)
 {
-	oFormulaEditorSettings = editorJQuery("#" + sTextAreaId).data("formulaEditorSettings");
+	oFormulaEditorSettings = editorJQuery(editAreas[sTextAreaId].textarea).data("formulaEditorSettings");
 	
 	//execute this manually because chrome doesn't recognize off on intial load?
 	//the textarea[wrap=off] useragent styles don't apply initially for some reason
@@ -252,23 +276,26 @@ function FormulaEditAreaLoaded(sTextAreaId)
 	if (oFormulaEditorSettings.OverrideInsertButtons == true)
 	{
 		//backup the standard salesforce insert function
-		var insertTextAtSelectionInEditor_backup = insertTextAtSelectionInEditor;
-		
-		//override standard insert function
-		insertTextAtSelectionInEditor = function(textAreaName, value)
+		if (typeof(insertTextAtSelectionInEditor) != "undefined")
 		{
-			//remove leading and trailing space around value to insert
-			value = value.trim();
+			var insertTextAtSelectionInEditor_backup = insertTextAtSelectionInEditor;
 			
-			//if the enhanced editor is loaded then insert using its functions
-			if (document.getElementById("edit_area_toggle_checkbox_" + sTextAreaId).checked == true)
+			//override standard insert function
+			insertTextAtSelectionInEditor = function(textAreaName, value)
 			{
-				editAreaLoader.insertTags(sTextAreaId, value, "");
-			}
-			else
-			{
-				//if the enhanced editor is not loaded then insert using salesforce's normal function
-				insertTextAtSelectionInEditor_backup(textAreaName, value);
+				//remove leading and trailing space around value to insert
+				value = value.trim();
+				
+				//if the enhanced editor is loaded then insert using its functions
+				if (document.getElementById("edit_area_toggle_checkbox_" + sTextAreaId).checked == true)
+				{
+					editAreaLoader.insertTags(sTextAreaId, value, "");
+				}
+				else
+				{
+					//if the enhanced editor is not loaded then insert using salesforce's normal function
+					insertTextAtSelectionInEditor_backup(textAreaName, value);
+				}
 			}
 		}
 	}
@@ -355,9 +382,25 @@ function FormulaEditAreaLoaded(sTextAreaId)
 		}
 	}
   
+  var sCustomButtonLeft = "0";
+  
+  //SETUP THE SAVE BUTTON FOR POPUP WINDOW EDITORS (FLOWS)
+  //FIND THE EDITOR AND INJECT THE BUTTON, THE EDITOR IFRAME IS ALWAYS RIGHT AFTER THE TEXT AREA
+  if (oFormulaEditorSettings.Popup == true)
+  {
+	  var $saveButton = editorJQuery("<input type='button' value='Save' class='btnSaveFormula' style='position: absolute; left: " + sCustomButtonLeft + "px; margin: 1px 0 0 2px; padding: 0 2px;' />");
+	  $saveButton.click(function()
+	  {
+		//send a postmessage to the current window (the popup window) so that the contentscript postmessage handler can receive the updated formula and set it on the field
+		window.postMessage(editAreaLoader.getValue(sTextAreaId), "*")
+	  });
+	  editorJQuery("#" + sTextAreaId).next("iframe").contents().find("#toolbar_1").prepend($saveButton);
+	  sCustomButtonLeft = "40";
+  }  
+  
   //SETUP THE FORMAT BUTTON
   //FIND THE EDITOR AND INJECT THE FORMAT BUTTON, THE EDITOR IFRAME IS ALWAYS RIGHT AFTER THE TEXT AREA
-  var $formatButton = editorJQuery("<input type='button' value='Format' class='btnFormaFormula' style='position: absolute; left: 0; margin: 1px 0 0 2px; padding: 0 2px;' />");
+  var $formatButton = editorJQuery("<input type='button' value='Format' class='btnFormaFormula' style='position: absolute; left: " + sCustomButtonLeft + "px; margin: 1px 0 0 2px; padding: 0 2px;' />");
   $formatButton.click(function()
   {
     formatFormula(sTextAreaId);
