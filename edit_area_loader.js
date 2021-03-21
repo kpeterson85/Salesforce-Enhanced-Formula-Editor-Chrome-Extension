@@ -334,7 +334,7 @@ EditAreaLoader.prototype ={
 				father.appendChild(span);
 			else
 				father.insertBefore(span, next);
-			console.log("checkbox added");
+			//console.log("checkbox added");
 		}
 		
 		if(!editAreas[id]["initialized"])
@@ -437,7 +437,7 @@ EditAreaLoader.prototype ={
 		f.document.close();
 		
 		//======================================
-		//THIS CODE IS ALSY IN edit_area.js
+		//THIS CODE IS ALSO IN edit_area.js
 		//======================================
 		AttachEditorEventHandler("click");
 		AttachEditorEventHandler("mousedown");
@@ -447,10 +447,13 @@ EditAreaLoader.prototype ={
 		AttachEditorEventHandler("focus");
 		AttachEditorEventHandler("blur");
 		
+		//THIS APPROACH FOR EVENT HANDLERS WAS NEEDED BECAUSE ORIGINALLY THESE WERE INLINE ATTRIBUTES ON THE ELEMENTS
+		//BUT SALESFORCE PROCESS BUILDER/FLOW PAGE SECURITY DOESN'T ALLOW INLINE EVENT ATTRIBUTES SO THESE HAD TO BE ATTACHED
+		//USING EVENT HANDLERS
 		function AttachEditorEventHandler(sEvent)
 		{
 			var eventElements = document.querySelectorAll("[data-editor-on" + sEvent + "]");
-			console.log(eventElements);
+			//console.log(eventElements);
 			for (i = 0; i < eventElements.length; ++i)
 			{
 				eventElements[i].addEventListener(sEvent, function()

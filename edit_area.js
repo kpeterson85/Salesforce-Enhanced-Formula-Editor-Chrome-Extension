@@ -269,10 +269,10 @@
 		});
 		
 
-		console.log(document);
+		//console.log(document);
 		
 		//======================================
-		//THIS CODE IS ALSY IN edit_area_loader.js
+		//THIS CODE IS ALSO IN edit_area_loader.js
 		//======================================
 		AttachEditorEventHandler("click");
 		AttachEditorEventHandler("mousedown");
@@ -282,10 +282,13 @@
 		AttachEditorEventHandler("focus");
 		AttachEditorEventHandler("blur");
 		
+		//THIS APPROACH FOR EVENT HANDLERS WAS NEEDED BECAUSE ORIGINALLY THESE WERE INLINE ATTRIBUTES ON THE ELEMENTS
+		//BUT SALESFORCE PROCESS BUILDER/FLOW PAGE SECURITY DOESN'T ALLOW INLINE EVENT ATTRIBUTES SO THESE HAD TO BE ATTACHED
+		//USING EVENT HANDLERS
 		function AttachEditorEventHandler(sEvent)
 		{
 			var eventElements = document.querySelectorAll("[data-editor-on" + sEvent + "]");
-			console.log(eventElements);
+			//console.log(eventElements);
 			for (i = 0; i < eventElements.length; ++i)
 			{
 				eventElements[i].addEventListener(sEvent, function()

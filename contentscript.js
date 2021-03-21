@@ -4,21 +4,21 @@ function init() {
 	
 	var sId = "";
 	
-	if (document.getElementById("CalculatedFormula") != null)
+	if (document.getElementById("CalculatedFormula") != null) //FORMULA FIELD, WORKFLOW FIELD UPDATE FORMULA (DOES NOT WORK)
 	{
 		sId = "CalculatedFormula";
 	}
-	else if (document.getElementById("formulaTextArea") != null)
+	else if (document.getElementById("formulaTextArea") != null) //WORKFLOW RULE FORMULA
 	{
 		sId = "formulaTextArea";
 	}
-	else if (document.getElementById("ValidationFormula") != null)
+	else if (document.getElementById("ValidationFormula") != null) //VALIDATION RULE
 	{
 		sId = "ValidationFormula";
 	}
 	
 	//some pages like 'add formula field' pages have hidden inputs
-	//with the same id's as above so we must specify that it's a text area
+	//with the same id's as above so we must specify that it's a text area to know it's an editable field
 	if (sId != "" && document.getElementById(sId).tagName == "TEXTAREA")
 	{
 		LoadEditorFiles(document, document.getElementById(sId));
@@ -30,17 +30,20 @@ function init() {
 		{
 			mutations.forEach(function(mutation)
 			{
-				if (!mutation.addedNodes) return;
+				if (!mutation.addedNodes) return; //only care about newly added elements
 
+				//textarea[name='Formula'] = flow formula resource
+				//textarea[name='formulaExpression'] = flow screen field validation rule
+				//div.processuicommonFormulaBuilder textarea = proccess builder action group criteria, process builder update record formula
 				var elements = document.querySelectorAll("textarea[name='Formula'], textarea[name='formulaExpression'], div.processuicommonFormulaBuilder textarea");
 
-				if (elements.length > 0) //we add the id ourselves so if it exists it means we've already seen this field
+				if (elements.length > 0)
 				{
 					for (var e = 0; e < elements.length; e++)
 					{
-						if (elements[e].classList.contains("enhanced") == false)
+						if (elements[e].classList.contains("enhanced") == false)  //we add this class ourselves so if it exists it means we've already seen this field
 						{
-							console.log("Found lazy load formula field");
+							//console.log("Found lazy load formula field");
 					
 							elements[e].classList.add("enhanced");
 							
@@ -52,7 +55,7 @@ function init() {
 							var componentRoot = elements[e].closest(".property-input"); //FLOW formulas
 							if (componentRoot == null)
 							{
-								componentRoot = elements[e].closest(".formulaBuilder"); //Proccess builder criteria formulas
+								componentRoot = elements[e].closest(".formulaBuilder"); //Proccess builder action group criteria formulas
 							}
 							if (componentRoot == null)
 							{
@@ -69,25 +72,28 @@ function init() {
 								{
 									var btn = this;
 									
+									//if a popup isn't already created for the button then create one
 									if (typeof(btn.popup) == "undefined" || btn.popup == null)
 									{
-										var newWin = open('','Formula Editor - ' + btn.editorField.id,'height=500,width=700'); //unique name with field id so multiple windows can be opened
+										var newWin = open('','Formula Editor - ' + btn.editorField.id,'height=500,width=700'); //unique name with field id so multiple windows can be opened for different fields at one time
 										btn.popup = newWin;
 										
 										var popupTitle = document.createElement("title");
 										popupTitle.innerText = "Formula Editor Popup";
 										newWin.document.head.appendChild(popupTitle);
 										
+										//create a formula text area in the popup for ourselves and use the id "Calculated Formula" which is one of the standard formula field ids we enhance
 										var popupTextarea = document.createElement("textarea");
 										popupTextarea.id = "CalculatedFormula";
 										popupTextarea.value = btn.editorField.value;
-										popupTextarea.setAttribute("data-editor-popup", "true");
+										popupTextarea.setAttribute("data-editor-popup", "true"); //add this attribute so the activate_editor code knows it is in a popup context
 										popupTextarea.setAttribute("style", "width: 100%; height: 100%;");
 										newWin.document.body.appendChild(popupTextarea);
 										
 										newWin.editorField = btn.editorField;
 										newWin.btn = btn;
 										
+										//in the formula popup we could not reference window.opener for security reasons so we went with window postmessages
 										newWin.addEventListener("message", function(event)
 										{
 										  //receive the postmessage from the popup window (sent from activate_editor) which contains the updated formula

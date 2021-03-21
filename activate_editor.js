@@ -1,4 +1,4 @@
-console.log("activate_editor loaded");
+//console.log("activate_editor loaded");
 
 editAreaLoader.window_loaded();
 
@@ -30,7 +30,7 @@ if (sId != "" && document.getElementById(sId).tagName == "TEXTAREA")
 	var elements = editorJQuery('#' + sId);
 	if (elements.length == 1)
 	{
-		console.log("Found direct formula field");
+		//console.log("Found direct formula field");
 		ActivateWhenTextFieldsVisible(elements[0]);
 	}
 }
