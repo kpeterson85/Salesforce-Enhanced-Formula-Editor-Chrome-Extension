@@ -50,6 +50,7 @@ function init() {
 							var btnOpen = document.createElement("input");
 							btnOpen.type = "button";
 							btnOpen.value = "Open Enhanced Formula Editor";
+							btnOpen.setAttribute("class", "btnOpenEnhancedFormulaEditor");
 							btnOpen.setAttribute("style", "margin-left: 10px;");
 							
 							var componentRoot = elements[e].closest(".property-input"); //FLOW formulas
@@ -62,7 +63,10 @@ function init() {
 								componentRoot = elements[e].closest(".inlineFormulaBuilder"); //Proccess builder update record field formulas
 							}
 							
-							if (componentRoot != null)
+							//MAKE SURE WE FOUND THE PARENT SHELL ELEMENT AND THAT IT DOESN'T ALREADY HAVE AN OPEN Button
+							//-FOR PROCESS BUILDERS WHEN CLICKING THE 'ADD CRITERIA' DIAMOND BUTTON IT WAS RESETTING THE STYLES ON THE FORMULA TEXT FIELD REMOVING THE 'enhanced' CLASS ON THE FIELD BUT KEEPING THE CUSTOM BUTTON THAT HAD BEEN ADDED
+							//SO DON'T ADD ANOTHER ONE IF THE BUTTON ALREADY EXISTS
+							if (componentRoot != null && componentRoot.querySelector("label").querySelector(".btnOpenEnhancedFormulaEditor") == null)
 							{
 								componentRoot.querySelector("label").appendChild(btnOpen);
 								
