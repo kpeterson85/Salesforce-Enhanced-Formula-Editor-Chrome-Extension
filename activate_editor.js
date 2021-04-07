@@ -86,6 +86,11 @@ function ActivateWhenTextFieldsVisible(eTextfield)
 					oFormulaEditorSettings.ObjectAPIName = $objectIdField.val();
 				}
 			}
+			
+			if (readCookie("sid") == null)
+			{
+				console.log("Enhanced Formula Editor - session id cookie not found");
+			}
 				
 			//CONNECT TO SALESFORCE
 			window.jsforceConnection = new jsforce.Connection({
@@ -881,7 +886,7 @@ function GetFieldsFromFormula(sFormula)
 	sFormula = sFormula.replace(/\,/ig, " ");
 	
 	//OPERATORS
-	sFormula = sFormula.replace(/[\+\-\/\*\=\<\>\^]/ig, " ");
+	sFormula = sFormula.replace(/[\+\-\/\*\!\=\<\>\^]/ig, " ");
 	
 	//VALUES
 	sFormula = sFormula.replace(/(\btrue\b|\bfalse\b|\bnull\b|\b[0-9]+(\.[0-9]+)?\b)/ig, " ");
