@@ -15,7 +15,7 @@
 	"content_scripts": [
 		{
 			"js": [ "contentscript.js" ],
-			"matches": [ "https://*.salesforce.com/*", "https://*.lightning.force.com/*" ],
+			"matches": [ "https://*.salesforce.com/*", "https://*.lightning.force.com/*", "https://*.cloudforce.com/*" ],
 			"all_frames": true
 		}
 	],
@@ -43,7 +43,7 @@
 	],
 	"description": "Enhances the formula editor textareas to have syntax highlighting, tabbing, parenthesis matching, and find and replace.",
 	"name": "Salesforce.com Enhanced Formula Editor",
-	"version": "2.0.1",
+	"version": "2.0.2",
 	"options_page": "options.html",
 	"permissions": ["storage"]
 }
