@@ -1134,13 +1134,16 @@ function getFormattedFormulaRecursive(currentToken, iTabDepth)
     if (currentToken.parent.complexChildren == true)
     {
       //DON'T ADD NEWLINE IF NEXT TOKEN IS A SINGLE LINE COMMENT
-      if (currentToken.rightSibling.type != "COMMENT" || (currentToken.rightSibling.type == "COMMENT" && currentToken.rightSibling.value.split("\n").length > 1))
-      {
-        sFormula += "\n" + "  ".repeat(iTabDepth-1);
-      }
-      else
+      if (
+		(currentToken.rightSibling.type == "COMMENT" && currentToken.rightSibling.value.split("\n").length < 2)	||
+		(currentToken.parent.type == "OPENPARENTHESIS" && currentToken.parent.leftSibling.type == "FUNCTION" && currentToken.parent.leftSibling.value == "CASE" && !(currentToken.childCommaIndex % 2 == 0))
+      )
       {
         sFormula += " "; //ADD SPACE BETWEEN THE COMMA AND COMMENT
+      }
+      else
+      {        
+		sFormula += "\n" + "  ".repeat(iTabDepth-1);
       }
     }
     else
@@ -1195,10 +1198,17 @@ function buildSyntaxTree(oTokenizer)
   function connectSiblings(currentToken)
   {
     //connecting siblings of the parent we're closing
+	var childCommaIndex = 0;
     for (var c = 1; c < currentToken.children.length; c++)
     {
       currentToken.children[c-1].rightSibling = currentToken.children[c];
       currentToken.children[c].leftSibling = currentToken.children[c-1];
+	  
+	  if (currentToken.children[c-1].type == "COMMA")
+	  {
+		currentToken.children[c-1].childCommaIndex = childCommaIndex;
+		childCommaIndex += 1;
+	  }
     }
   }
   
@@ -1368,6 +1378,7 @@ function tokenizer(sFormula)
       value: "",
       type: "",			
       parent: null,
+	  childCommaIndex: -1,
       leftSibling: null,
       rightSibling: null,
       children: [],
@@ -1380,9 +1391,10 @@ function tokenizer(sFormula)
   {
     return 	(iCharCode >= 65 && iCharCode <= 90) || //UPPERCASE LETTERS
         (iCharCode >= 97 && iCharCode <= 122) || //LOWERCASE LETTERS
-        iCharCode == 36 || //DOLLAR SIGN
+        iCharCode == 36 || //DOLLAR SIGN, IN THE CASE OF SYSTEM VALUES LIKE $User.IsActive
         iCharCode == 46 || //DECIMAL
         iCharCode == 95 || //UNDERSCORES
+		iCharCode == 58 || //COLON, IN THE CASE OF A POLYMORPHIC OWNER FIELD LIKE Owner:User.UserRoleId
         (iCharCode >= 48 && iCharCode <= 57) //NUMBERS CAN BE IN NAMES, NAME MUST START WITH LETTER AND THEN CAN CONTAIN NUMBERS
   }
 
