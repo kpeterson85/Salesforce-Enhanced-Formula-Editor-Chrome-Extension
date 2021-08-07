@@ -1133,7 +1133,7 @@ function getFormattedFormulaRecursive(currentToken, iTabDepth)
     
     if (currentToken.parent.complexChildren == true)
     {
-      //DON'T ADD NEWLINE IF NEXT TOKEN IS A SINGLE LINE COMMENT
+      //DON'T ADD NEWLINE IF NEXT TOKEN IS A SINGLE LINE COMMENT OR A CASE FUNCTION KEY/VALUE ENTRY
       if (
 		(currentToken.rightSibling.type == "COMMENT" && currentToken.rightSibling.value.split("\n").length < 2)	||
 		(currentToken.parent.type == "OPENPARENTHESIS" && currentToken.parent.leftSibling.type == "FUNCTION" && currentToken.parent.leftSibling.value == "CASE" && !(currentToken.childCommaIndex % 2 == 0))
