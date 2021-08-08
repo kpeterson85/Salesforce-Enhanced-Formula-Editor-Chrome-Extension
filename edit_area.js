@@ -287,10 +287,11 @@
 		//USING EVENT HANDLERS
 		function AttachEditorEventHandler(sEvent)
 		{
-			var eventElements = document.querySelectorAll("[data-editor-on" + sEvent + "]");
+			var eventElements = document.querySelectorAll("[data-editor-on" + sEvent + "]:not(.data-editor-on" + sEvent + "-bound");
 			//console.log(eventElements);
 			for (i = 0; i < eventElements.length; ++i)
 			{
+				eventElements[i].classList.add("data-editor-on" + sEvent + "-bound");
 				eventElements[i].addEventListener(sEvent, function()
 				{
 					eval(this.getAttribute("data-editor-on" + sEvent).replace("return false;", "").replace("return ", ""));

@@ -342,6 +342,8 @@ EditAreaLoader.prototype ={
 			t.execCommand(id, "EA_init");	// ini callback
 			if(editAreas[id]["settings"]["display"]=="later"){
 				editAreas[id]["initialized"]= true;
+				//THIS CODE IS REACHED IF THE EDITOR IS SET TO INITIALIZE LATER, IF THE EDITOR IS SET TO INITIALIZE ONLOAD THEN IT IS CALLED WHEN THIS START FUNCTION COMPLETES
+				CallAttachEditorEventHandlerFunctions();
 				return;
 			}
 		}
@@ -436,32 +438,39 @@ EditAreaLoader.prototype ={
 		f.document.write(template);		
 		f.document.close();
 		
-		//======================================
-		//THIS CODE IS ALSO IN edit_area.js
-		//======================================
-		AttachEditorEventHandler("click");
-		AttachEditorEventHandler("mousedown");
-		AttachEditorEventHandler("mouseover");
-		AttachEditorEventHandler("mouseout");
-		AttachEditorEventHandler("change");
-		AttachEditorEventHandler("focus");
-		AttachEditorEventHandler("blur");
+		//THIS CODE IS REACHED IF THE EDITOR IS SET TO INITIALIZE ON LOAD, IF THE EDITOR IS SET TO INITIALIZER LATER THEN IT IS CALLED WHEN THE 'DISPLAY' SETTING IS CHECKED
+		CallAttachEditorEventHandlerFunctions();
 		
-		//THIS APPROACH FOR EVENT HANDLERS WAS NEEDED BECAUSE ORIGINALLY THESE WERE INLINE ATTRIBUTES ON THE ELEMENTS
-		//BUT SALESFORCE PROCESS BUILDER/FLOW PAGE SECURITY DOESN'T ALLOW INLINE EVENT ATTRIBUTES SO THESE HAD TO BE ATTACHED
-		//USING EVENT HANDLERS
-		function AttachEditorEventHandler(sEvent)
+		function CallAttachEditorEventHandlerFunctions()
 		{
-			var eventElements = document.querySelectorAll("[data-editor-on" + sEvent + "]");
-			//console.log(eventElements);
-			for (i = 0; i < eventElements.length; ++i)
+			//======================================
+			//THIS CODE IS ALSO IN edit_area.js
+			//======================================
+			AttachEditorEventHandler("click");
+			AttachEditorEventHandler("mousedown");
+			AttachEditorEventHandler("mouseover");
+			AttachEditorEventHandler("mouseout");
+			AttachEditorEventHandler("change");
+			AttachEditorEventHandler("focus");
+			AttachEditorEventHandler("blur");
+			
+			//THIS APPROACH FOR EVENT HANDLERS WAS NEEDED BECAUSE ORIGINALLY THESE WERE INLINE ATTRIBUTES ON THE ELEMENTS
+			//BUT SALESFORCE PROCESS BUILDER/FLOW PAGE SECURITY DOESN'T ALLOW INLINE EVENT ATTRIBUTES SO THESE HAD TO BE ATTACHED
+			//USING EVENT HANDLERS
+			function AttachEditorEventHandler(sEvent)
 			{
-				eventElements[i].addEventListener(sEvent, function()
+				var eventElements = document.querySelectorAll("[data-editor-on" + sEvent + "]:not(.data-editor-on" + sEvent + "-bound");
+				//console.log(eventElements);
+				for (i = 0; i < eventElements.length; ++i)
 				{
-					eval(this.getAttribute("data-editor-on" + sEvent).replace("return false;", "").replace("return ", ""));
-					
-					return false;
-				});
+					eventElements[i].classList.add("data-editor-on" + sEvent + "-bound");
+					eventElements[i].addEventListener(sEvent, function()
+					{
+						eval(this.getAttribute("data-editor-on" + sEvent).replace("return false;", "").replace("return ", ""));
+						
+						return false;
+					});
+				}
 			}
 		}
 
