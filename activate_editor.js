@@ -87,19 +87,25 @@ function ActivateWhenTextFieldsVisible(eTextfield)
 				}
 			}
 			
-			if (readCookie("sid") == null)
+			var sAccessToken = readCookie("sid");
+			
+			//IF SESSION ID COOKIE IS NOT PRESENT BECAUSE OF THE 'REQUIRE HTTP ONLY' SECURITY SETTING, THEN CHECK IF WE HAVE AN OAUTH ACCESS TOKEN AVAILABLE
+			if (sAccessToken == null)
 			{
-				console.log("Enhanced Formula Editor - session id cookie not found");
+				sAccessToken = document.getElementById("hdnFormulaEditorAccessToken").value;	
 			}
-				
+			
 			//CONNECT TO SALESFORCE
 			window.jsforceConnection = new jsforce.Connection({
 				serverUrl : "https://" + document.location.host,
-				sessionId : readCookie("sid"),
+				sessionId : sAccessToken,
 				version: "50.0"
 			});
 
 			ActivateEditor(oFormulaEditorSettings);
+			
+				
+			
 		}
 	},
 	{
@@ -1489,6 +1495,3 @@ function lexer(sFormula)
     }
   }	
 }
-
-
-

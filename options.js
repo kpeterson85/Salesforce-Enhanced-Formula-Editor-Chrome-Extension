@@ -1,3 +1,6 @@
+//LOCATED IN BACKGROUND.JS FILE TOO
+var sAPIClientId = "3MVG9p1Q1BCe9GmALL6RB0m5Kl5Hr1gFOLLDZ9w1bcNcj9gTKsxvnILXcaFZ2PjVF2NXxpNvUqSrjnpWBsJ.0";
+
 document.addEventListener('DOMContentLoaded', function()
 {
 	chrome.storage.sync.get(['FormulaEditorLicense'], function(result)
@@ -10,6 +13,98 @@ document.addEventListener('DOMContentLoaded', function()
 		}
 	});
 	
+	DisplayConnectedAccountsTable();
+	
+	var code = getURLParameter('code');
+	var state = getURLParameter('state'); //contains the original login url
+	if (code != null)
+	{
+		//web server flow
+		var url = state+'/services/oauth2/token';
+		var body = ('grant_type=authorization_code&client_id='+encodeURIComponent(sAPIClientId)
+				+'&redirect_uri='+encodeURIComponent('chrome-extension://'+chrome.runtime.id+'/options.html')
+				+'&code='+encodeURIComponent(code));
+		
+		var oAccessInfo = {};
+		
+		//exchange code for access token
+		fetch(url, {
+			method: "POST",
+			headers: {
+				'Accept': 'application/json',
+				'Content-Type': 'application/x-www-form-urlencoded'
+			},
+			body: body
+		})
+		.then((res) => res.json())
+		.then(function (data)
+		{
+			console.log("access token");
+			console.log(data);
+			
+			oAccessInfo = data;
+			
+			oAccessInfo.userId = data.id.split('/')[5];
+			oAccessInfo.orgId = data.id.split('/')[4];
+			
+			//get user info
+			fetch(data.id, {
+				method: "GET",
+				headers: {
+					'Authorization' : 'Bearer ' + data.access_token,
+				}
+			})
+			.then((res) => res.json())
+			.then(function (data)
+			{
+				console.log("user info");
+				console.log(data);
+			
+				oAccessInfo.username = data.username;
+				oAccessInfo.first_name = data.first_name;
+				oAccessInfo.last_name = data.last_name;
+				
+				console.log("final access object");
+				console.log(oAccessInfo);
+				
+				chrome.storage.sync.get(['FormulaEditorAccessTokens'], function(result)
+				{
+					//console.log('Value is set to ' + value);
+					
+					result.FormulaEditorAccessTokens = result.FormulaEditorAccessTokens || {};
+					
+					result.FormulaEditorAccessTokens[oAccessInfo.userId+'_'+oAccessInfo.orgId] = oAccessInfo;
+					
+					console.log("updating storage");
+					console.log(result.FormulaEditorAccessTokens);
+									
+					chrome.storage.sync.set({'FormulaEditorAccessTokens': result.FormulaEditorAccessTokens}, function()
+					{
+						//console.log('Value is set to ' + value);
+						DisplayConnectedAccountsTable();
+					});
+				});			
+				
+
+			})
+			.catch(function (err)
+			{
+				document.getElementById("status").innerHTML = "An error occurred aquiring access token. Please try again.";
+				document.getElementById("status").classList.remove("success");
+				document.getElementById("status").classList.add("error");
+				document.getElementById("status").style.display = "block";
+			});
+			
+		})
+		.catch(function (err)
+		{
+			document.getElementById("status").innerHTML = "An error occurred aquiring access token. Please try again.";
+			document.getElementById("status").classList.remove("success");
+			document.getElementById("status").classList.add("error");
+			document.getElementById("status").style.display = "block";
+		});		
+		
+	}
 	
 	document.getElementById('licenseForm').addEventListener('submit', function(e)
 	{
@@ -83,10 +178,103 @@ document.addEventListener('DOMContentLoaded', function()
 		
 		return false;
 	});
+	
+	
+	document.getElementById('ConnectToSalesforce').addEventListener('click', function(e)
+	{
+		var server = 'https://login.salesforce.com';
+		var scopes = ['web','api','refresh_token'];
+		//User Agent Flow
+		var url = server+'/services/oauth2/authorize?response_type=code'
+				+'&client_id=' + sAPIClientId
+				+'&state='
+					+encodeURIComponent(server)
+				//only for web server
+				+'&immediate=false'
+				+'&prompt=login'
+				+'&redirect_uri='
+					+encodeURIComponent('chrome-extension://'+chrome.runtime.id+'/options.html')
+				+'&scope='
+					+scopes.join('%20')
+				+'&display=popup';
+		window.location.href = url;
+	});
 });
 
-	
-	
+function getURLParameter(name) {
+	return decodeURIComponent((new RegExp('[?|&]' + name + '=' + '([^&;]+?)(&|#|;|$)').exec(location.search) || [null, ''])[1].replace(/\+/g, '%20')) || null;
+}
+
+function DisplayConnectedAccountsTable()
+{
+	chrome.storage.sync.get(['FormulaEditorAccessTokens'], function(result)
+	{
+		result.FormulaEditorAccessTokens = result.FormulaEditorAccessTokens || {};
+		
+		console.log(result.FormulaEditorAccessTokens);
+		
+		var sHTML = '<table cellspacing="0" cellpadding="5" border="1" style="border-collapse: collapse;"><thead><tr>'
+			+'<th scope="col">User</th>'
+			+'<th scope="col">Instance URL</th>'
+			+'<th scope="col"/>'
+			+'<tr></thead><tbody>';
+
+		//sort refresh tokens by username
+		var sorted = [];
+		for(var key in result.FormulaEditorAccessTokens){
+			sorted.push(result.FormulaEditorAccessTokens[key]);
+		}
+		sorted.sort(function(a,b){
+			if(!a) return 1;
+			if(!b) return -1;
+			var a = (a.username || '').toLowerCase();
+			var b = (b.username || '').toLowerCase();
+			if(a < b) return -1;
+			else if(a > b) return 1;
+			return 0;
+		});
+
+		//creates a row for each stored token
+		for(var i = 0; i < sorted.length; i++)
+		{
+
+			//gets the instance name
+			var instance = (sorted[i].instance_url) || '';
+			instance = instance.replace('https://','').split('.')[0];
+
+			sHTML += '<tr>'
+					+'<td ><small>'
+						+(sorted[i].first_name || '') +' '
+						+sorted[i].last_name
+						+'</small><br/>'
+						+'<strong>'+sorted[i].username+'</strong>'
+					+'</td>'
+					+'<td >'+instance+'</td>'
+					+'<td><button class="btn-delete">Delete</button></td>'
+				+'</tr>';
+
+
+		}
+		
+		sHTML += '</tbody></table>';
+		
+		/*
+		//login button handler
+		tr.find('button.btn-delete')
+		.attr('data-user-id', sorted[i].userId)
+		.attr('data-org-id', sorted[i].orgId)
+		.click(function()
+		{
+			var userId = $(this).attr('data-user-id');
+			var orgId = $(this).attr('data-org-id');				
+
+			
+		});
+		*/
+
+		document.getElementById('connectedAccountsShell').innerHTML = sHTML;
+	});
+}
 	
 
 

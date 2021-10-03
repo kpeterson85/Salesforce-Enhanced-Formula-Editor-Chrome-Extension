@@ -209,47 +209,92 @@ function init() {
 						data.success
 					)
 					{
-						var hiddenBaseURL = elDocument.createElement("input")
-						hiddenBaseURL.id = "ForceFormulaEditorBaseURL";
-						hiddenBaseURL.type = "hidden";
-						hiddenBaseURL.value = chrome.extension.getURL("");
-						if (elDocument.getElementsByTagName("body").length == 0)
-						{
-							elDocument.getElementsByTagName("html")[0].appendChild(elDocument.createElement("body"))
-						}
-						elDocument.getElementsByTagName("body")[0].appendChild(hiddenBaseURL);				
-						
-						var loader = elDocument.createElement("script");
-						loader.type = "text/javascript";
-						loader.src = chrome.extension.getURL("edit_area_loader.js");
-						loader.charset = "UTF-8";
-						loader.onload = loaderLoaded;
-						elDocument.getElementsByTagName("head")[0].appendChild(loader);		
+						//GET ANY STORED ACCESS TOKENS FOR THIS ORG AND USER
+						chrome.storage.sync.get(['FormulaEditorAccessTokens'], function(result)
+						{							
+							result.FormulaEditorAccessTokens = result.FormulaEditorAccessTokens || {};
+							
+							//DISCO COOKIE HAS LAST USER AND ORG SIGNED IN IN THE FORMAT BELOW
+							//5f:00D5f000001zCVL:0055f000000SNQf:1
+							var sDiscoCookie = readCookie("disco");
+							var oDiscoCookieParts = sDiscoCookie.split(":");
+							var sOrgId = oDiscoCookieParts[1];
+							sOrgId = convert15Idto18(sOrgId);
+							var sUserId = oDiscoCookieParts[2];	
+							sUserId = convert15Idto18(sUserId);							
+							
+							//IF WE HAVE ACCESS TOKEN INFO ON FILE THEN CHECK IT, OTHERWISE LOAD THE FILES WITHOUT IT
+							var sAccessToken = "";
+							if (result.FormulaEditorAccessTokens.hasOwnProperty(sUserId+'_'+sOrgId))
+							{
+								var oAccessInfo = result.FormulaEditorAccessTokens[sUserId+'_'+sOrgId];								
 
-						function loaderLoaded()
-						{								
-							var jqueryScript = elDocument.createElement("script");
-							jqueryScript.type = "text/javascript";
-							jqueryScript.src = chrome.extension.getURL("jquery.min.js");
-							jqueryScript.charset = "UTF-8";
-							elDocument.getElementsByTagName("head")[0].appendChild(jqueryScript);
-							
-							var jsforceScript = elDocument.createElement("script");
-							jsforceScript.type = "text/javascript";
-							jsforceScript.src = chrome.extension.getURL("jsforce-core.min.js");
-							jsforceScript.charset = "UTF-8";
-							jsforceScript.onload = jsforceScriptLoaded;
-							elDocument.getElementsByTagName("head")[0].appendChild(jsforceScript);
-							
-							function jsforceScriptLoaded()
-							{								
-								var activate = elDocument.createElement("script");
-								activate.type = "text/javascript";
-								activate.src = chrome.extension.getURL("activate_editor.js");
-								activate.charset = "UTF-8";
-								elDocument.getElementsByTagName("head")[0].appendChild(activate);
+								chrome.runtime.sendMessage({type: "FormulaEditorAccessTokenCheck", data: oAccessInfo}, function(response)
+								{
+									oAccessInfo = response;
+									sAccessToken = oAccessInfo.access_token;
+									FinishLoadingFiles();
+								});
 							}
-						}
+							else
+							{
+								FinishLoadingFiles();
+							}
+
+							function FinishLoadingFiles()
+							{
+								//ADD THE VALUE TO THE PAGE IN A HIDDEN FIELD SO WE CAN ACCESS IT,
+								//CONTENT SCRIPT CAN'T SET/ACCESS WINDOW VARIABLES
+								var hdnAccessToken = elDocument.createElement("input");
+								hdnAccessToken.type = "hidden";
+								hdnAccessToken.id = "hdnFormulaEditorAccessToken";
+								hdnAccessToken.value = sAccessToken;
+								elDocument.getElementsByTagName("body")[0].appendChild(hdnAccessToken);
+								
+								var hiddenBaseURL = elDocument.createElement("input")
+								hiddenBaseURL.id = "ForceFormulaEditorBaseURL";
+								hiddenBaseURL.type = "hidden";
+								hiddenBaseURL.value = chrome.extension.getURL("");
+								if (elDocument.getElementsByTagName("body").length == 0)
+								{
+									elDocument.getElementsByTagName("html")[0].appendChild(elDocument.createElement("body"))
+								}
+								elDocument.getElementsByTagName("body")[0].appendChild(hiddenBaseURL);				
+								
+								var loader = elDocument.createElement("script");
+								loader.type = "text/javascript";
+								loader.src = chrome.extension.getURL("edit_area_loader.js");
+								loader.charset = "UTF-8";
+								loader.onload = loaderLoaded;
+								elDocument.getElementsByTagName("head")[0].appendChild(loader);		
+
+								function loaderLoaded()
+								{								
+									var jqueryScript = elDocument.createElement("script");
+									jqueryScript.type = "text/javascript";
+									jqueryScript.src = chrome.extension.getURL("jquery.min.js");
+									jqueryScript.charset = "UTF-8";
+									elDocument.getElementsByTagName("head")[0].appendChild(jqueryScript);
+									
+									var jsforceScript = elDocument.createElement("script");
+									jsforceScript.type = "text/javascript";
+									jsforceScript.src = chrome.extension.getURL("jsforce-core.min.js");
+									jsforceScript.charset = "UTF-8";
+									jsforceScript.onload = jsforceScriptLoaded;
+									elDocument.getElementsByTagName("head")[0].appendChild(jsforceScript);
+									
+									function jsforceScriptLoaded()
+									{								
+										var activate = elDocument.createElement("script");
+										activate.type = "text/javascript";
+										activate.src = chrome.extension.getURL("activate_editor.js");
+										activate.charset = "UTF-8";
+										elDocument.getElementsByTagName("head")[0].appendChild(activate);
+									}
+								}
+							}
+						});						
+						
 					}
 					else
 					{
@@ -275,4 +320,29 @@ function init() {
 		
 	}
 
+}
+
+function readCookie(name) {
+	var nameEQ = name + "=";
+	var ca = document.cookie.split(';');
+	for(var i=0;i < ca.length;i++) {
+		var c = ca[i];
+		while (c.charAt(0)==' ') c = c.substring(1,c.length);
+		if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
+	}
+	return null;
+}
+
+function convert15Idto18(sId)
+{
+	var s = "";
+	for (var i = 0; i < 3; i++) {
+		var f = 0;
+		for (var j = 0; j < 5; j++) {
+			var c = sId.charAt(i * 5 + j);
+			if (c >= "A" && c <= "Z") f += 1 << j;
+		}
+		s += "ABCDEFGHIJKLMNOPQRSTUVWXYZ012345".charAt(f);
+	}
+	return sId + s;
 }
