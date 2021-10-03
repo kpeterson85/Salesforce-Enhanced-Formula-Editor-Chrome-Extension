@@ -269,6 +269,14 @@ function FormulaEditAreaLoaded(sTextAreaId)
 		
 		$previewButton.click(LoadFieldValuesPreview);
 		
+		var sOptionsURL = "";		
+		if (typeof(document.getElementById("hdnFormulaEditorOptionsURL")) != "undefined" && document.getElementById("hdnFormulaEditorOptionsURL") != null)
+		{
+			sOptionsURL = document.getElementById("hdnFormulaEditorOptionsURL").value;
+		}
+		var sOptionsConnectAccountURL = sOptionsURL + "?connect=1";
+		var sUnableToAccessAPI = "Unable to access the API. Please connect your account so that field and record data can be loaded.<br>" + "<a href='" + sOptionsConnectAccountURL + "' target='_blank' class='btn' style='color: #000; font-weight: normal; margin: 10px 5px 0px 0; display: inline-block; text-decoration: none; border: 1px solid #b5b5b5; background: #f3f2f2; border-radius: 3px; padding: 3px 4px;'>Connect Account</a>";
+		
 		if (oFormulaEditorSettings.ObjectId != "")
 		{
 			//LOOKUP CUSTOM OBJECT API NAME USING ITS OBJECT ID
@@ -284,8 +292,16 @@ function FormulaEditAreaLoaded(sTextAreaId)
 				{
 					if (err)
 					{
+						if (err.errorCode == "INVALID_SESSION_ID")
+						{
+							$fieldsShell.find(".formulaEditorError").show().html(sUnableToAccessAPI);
+						}
+						else
+						{
+							$fieldsShell.find(".formulaEditorError").show().html("Error describing object '" + oFormulaEditorSettings.ObjectAPIName + "'. It may only be accessible from a newer version of the API or you may not have meta data api access. Error message: " + err.message);
+						}
 						console.error(err);
-						$fieldsShell.find(".formulaEditorError").show().text("Error describing object '" + oFormulaEditorSettings.ObjectAPIName + "'. It may only be accessible from a newer version of the API or you may not have meta data api access. Error message: " + err.message);
+						
 					}
 					else
 					{
@@ -302,8 +318,15 @@ function FormulaEditAreaLoaded(sTextAreaId)
 			{
 				if (err)
 				{
+					if (err.errorCode == "INVALID_SESSION_ID")
+					{
+						$fieldsShell.find(".formulaEditorError").show().html(sUnableToAccessAPI);
+					}
+					else
+					{
+						$fieldsShell.find(".formulaEditorError").show().html("Error describing object '" + oFormulaEditorSettings.ObjectAPIName + "'. It may only be accessible from a newer version of the API or you may not have meta data api access. Error message: " + err.message);
+					}
 					console.error(err);
-					$fieldsShell.find(".formulaEditorError").show().text("Error describing object '" + oFormulaEditorSettings.ObjectAPIName + "'. It may only be accessible from a newer version of the API or you may not have meta data api access. Error message:  " + err.message);
 				}
 				else
 				{

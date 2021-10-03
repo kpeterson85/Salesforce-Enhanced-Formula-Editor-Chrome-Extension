@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', function()
 		}
 	});
 	
-	DisplayConnectedAccountsTable();
+	DisplayConnectedAccountsTable();	
 	
 	var code = getURLParameter('code');
 	var state = getURLParameter('state'); //contains the original login url
@@ -82,6 +82,11 @@ document.addEventListener('DOMContentLoaded', function()
 					{
 						//console.log('Value is set to ' + value);
 						DisplayConnectedAccountsTable();
+						
+						document.getElementById("statusConnect").innerHTML = "You successfully connected your account!<br><br>You may need to refresh Salesforce formula pages for the update to take effect.";
+						document.getElementById("statusConnect").classList.remove("error");
+						document.getElementById("statusConnect").classList.add("success");
+						document.getElementById("statusConnect").style.display = "block";
 					});
 				});			
 				
@@ -89,19 +94,19 @@ document.addEventListener('DOMContentLoaded', function()
 			})
 			.catch(function (err)
 			{
-				document.getElementById("status").innerHTML = "An error occurred aquiring access token. Please try again.";
-				document.getElementById("status").classList.remove("success");
-				document.getElementById("status").classList.add("error");
-				document.getElementById("status").style.display = "block";
+				document.getElementById("statusLicense").innerHTML = "An error occurred aquiring access token. Please try again.";
+				document.getElementById("statusLicense").classList.remove("success");
+				document.getElementById("statusLicense").classList.add("error");
+				document.getElementById("statusLicense").style.display = "block";
 			});
 			
 		})
 		.catch(function (err)
 		{
-			document.getElementById("status").innerHTML = "An error occurred aquiring access token. Please try again.";
-			document.getElementById("status").classList.remove("success");
-			document.getElementById("status").classList.add("error");
-			document.getElementById("status").style.display = "block";
+			document.getElementById("statusLicense").innerHTML = "An error occurred aquiring access token. Please try again.";
+			document.getElementById("statusLicense").classList.remove("success");
+			document.getElementById("statusLicense").classList.add("error");
+			document.getElementById("statusLicense").style.display = "block";
 		});		
 		
 	}
@@ -145,33 +150,33 @@ document.addEventListener('DOMContentLoaded', function()
 					data.success
 				)
 				{
-					document.getElementById("status").innerHTML = "Subscription license key validated successfully!<br><br>You may need to refresh Salesforce formula pages for the update to take effect.";
-					document.getElementById("status").classList.remove("error");
-					document.getElementById("status").classList.add("success");
-					document.getElementById("status").style.display = "block";
+					document.getElementById("statusLicense").innerHTML = "Subscription license key validated successfully!<br><br>You may need to refresh Salesforce formula pages for the update to take effect.";
+					document.getElementById("statusLicense").classList.remove("error");
+					document.getElementById("statusLicense").classList.add("success");
+					document.getElementById("statusLicense").style.display = "block";
 				}
 				else
 				{
-					document.getElementById("status").innerHTML = "The subscription license key entered is either not valid or the subscription is not active.";
-					document.getElementById("status").classList.remove("success");
-					document.getElementById("status").classList.add("error");
-					document.getElementById("status").style.display = "block";
+					document.getElementById("statusLicense").innerHTML = "The subscription license key entered is either not valid or the subscription is not active.";
+					document.getElementById("statusLicense").classList.remove("success");
+					document.getElementById("statusLicense").classList.add("error");
+					document.getElementById("statusLicense").style.display = "block";
 				}
 			})
 			.catch(function (err)
 			{
-				document.getElementById("status").innerHTML = "An error occurred validating the subscription license key. Please try again.";
-				document.getElementById("status").classList.remove("success");
-				document.getElementById("status").classList.add("error");
-				document.getElementById("status").style.display = "block";
+				document.getElementById("statusLicense").innerHTML = "An error occurred validating the subscription license key. Please try again.";
+				document.getElementById("statusLicense").classList.remove("success");
+				document.getElementById("statusLicense").classList.add("error");
+				document.getElementById("statusLicense").style.display = "block";
 			});
 		}
 		else
 		{
-			document.getElementById("status").innerHTML = "No key provided";
-			document.getElementById("status").classList.remove("success");
-			document.getElementById("status").classList.add("error");
-			document.getElementById("status").style.display = "block";
+			document.getElementById("statusLicense").innerHTML = "No key provided";
+			document.getElementById("statusLicense").classList.remove("success");
+			document.getElementById("statusLicense").classList.add("error");
+			document.getElementById("statusLicense").style.display = "block";
 		}
 		
 		e.preventDefault();
@@ -179,8 +184,7 @@ document.addEventListener('DOMContentLoaded', function()
 		return false;
 	});
 	
-	
-	document.getElementById('ConnectToSalesforce').addEventListener('click', function(e)
+	function RedirectToSalesforceToConnect()
 	{
 		var server = 'https://login.salesforce.com';
 		var scopes = ['web','api','refresh_token'];
@@ -198,7 +202,18 @@ document.addEventListener('DOMContentLoaded', function()
 					+scopes.join('%20')
 				+'&display=popup';
 		window.location.href = url;
+	}
+	
+	document.getElementById('ConnectToSalesforce').addEventListener('click', function(e)
+	{
+		RedirectToSalesforceToConnect();
 	});
+	
+	var connect = getURLParameter('connect');
+	if (connect != null && connect == "1")
+	{
+		RedirectToSalesforceToConnect();
+	}
 });
 
 function getURLParameter(name) {
@@ -215,64 +230,89 @@ function DisplayConnectedAccountsTable()
 		
 		var sHTML = '<table cellspacing="0" cellpadding="5" border="1" style="border-collapse: collapse;"><thead><tr>'
 			+'<th scope="col">User</th>'
+			+'<th scope="col">Email</th>'
 			+'<th scope="col">Instance URL</th>'
 			+'<th scope="col"/>'
 			+'<tr></thead><tbody>';
 
 		//sort refresh tokens by username
 		var sorted = [];
-		for(var key in result.FormulaEditorAccessTokens){
+		for(var key in result.FormulaEditorAccessTokens)
+		{
 			sorted.push(result.FormulaEditorAccessTokens[key]);
-		}
-		sorted.sort(function(a,b){
-			if(!a) return 1;
-			if(!b) return -1;
-			var a = (a.username || '').toLowerCase();
-			var b = (b.username || '').toLowerCase();
-			if(a < b) return -1;
-			else if(a > b) return 1;
-			return 0;
-		});
-
-		//creates a row for each stored token
-		for(var i = 0; i < sorted.length; i++)
-		{
-
-			//gets the instance name
-			var instance = (sorted[i].instance_url) || '';
-			instance = instance.replace('https://','').split('.')[0];
-
-			sHTML += '<tr>'
-					+'<td ><small>'
-						+(sorted[i].first_name || '') +' '
-						+sorted[i].last_name
-						+'</small><br/>'
-						+'<strong>'+sorted[i].username+'</strong>'
-					+'</td>'
-					+'<td >'+instance+'</td>'
-					+'<td><button class="btn-delete">Delete</button></td>'
-				+'</tr>';
-
-
-		}
+		}		
 		
-		sHTML += '</tbody></table>';
-		
-		/*
-		//login button handler
-		tr.find('button.btn-delete')
-		.attr('data-user-id', sorted[i].userId)
-		.attr('data-org-id', sorted[i].orgId)
-		.click(function()
+		//IF WE FOUND ENTRIES FOR CONNECTED ACCOUNTS THEN LOAD THEM ON THE PAGE, OTHERWISE DON'T SHOW THE SECTION BECAUSE NOT ALL
+		//USERS USE THE CONNECTED ACCOUNTS FEATURE (IF THE SID SESSION COOKIE IS AVAILABLE)
+		if (sorted.length > 0)
 		{
-			var userId = $(this).attr('data-user-id');
-			var orgId = $(this).attr('data-org-id');				
+			sorted.sort(function(a,b)
+			{
+				if(!a) return 1;
+				if(!b) return -1;
+				var a = (a.username || '').toLowerCase();
+				var b = (b.username || '').toLowerCase();
+				if(a < b) return -1;
+				else if(a > b) return 1;
+				return 0;
+			});
 
+			//creates a row for each stored token
+			for(var i = 0; i < sorted.length; i++)
+			{
+
+				//gets the instance name
+				var instance = (sorted[i].instance_url) || '';
+				instance = instance.replace('https://','').split('.')[0];
+
+				sHTML += '<tr>'
+						+'<td >'
+							+(sorted[i].first_name || '') +' '
+							+sorted[i].last_name					
+						+'</td>'
+						+'<td>' + sorted[i].username + '</td>'
+						+'<td >'+instance+'</td>'
+						+'<td><button class="btn-delete" data-key="' + sorted[i].userId + '_' + sorted[i].orgId + '">Delete</button></td>'
+					+'</tr>';
+
+
+			}
 			
-		});
-		*/
+			sHTML += '</tbody></table>';
+			
+			document.getElementById('connectedAccountsShell').innerHTML = sHTML;
+			document.getElementById('connectedAccountsSection').style.display = 'block';
+		
+			//login button handler
+			document.querySelectorAll('button.btn-delete').forEach(function(btnDelete)
+			{
+				btnDelete.addEventListener("click", function()
+				{
+					var sKey = this.getAttribute('data-key');			
 
-		document.getElementById('connectedAccountsShell').innerHTML = sHTML;
+					chrome.storage.sync.get(['FormulaEditorAccessTokens'], function(result)
+					{
+						//console.log('Value is set to ' + value);
+						
+						result.FormulaEditorAccessTokens = result.FormulaEditorAccessTokens || {};
+						
+						delete result.FormulaEditorAccessTokens[sKey];
+						
+						console.log("updating storage");
+						console.log(result.FormulaEditorAccessTokens);
+										
+						chrome.storage.sync.set({'FormulaEditorAccessTokens': result.FormulaEditorAccessTokens}, function()
+						{
+							//console.log('Value is set to ' + value);
+							DisplayConnectedAccountsTable();
+						});
+					});		
+				});
+			});
+		}	
+		
+
+
 	});
 }
 	

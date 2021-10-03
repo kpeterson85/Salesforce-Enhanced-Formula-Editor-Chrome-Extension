@@ -15,25 +15,30 @@
 	</form>
 
 	<style>
-		#status.success {
+		.success {
 			color: #155724;
 			background-color: #d4edda;
 			border: 1px solid #c3e6cb;
 		}
 		
-		#status.error {
+		.error {
 			color: #856404;
 			background-color: #fff3cd;
 			border: 1px solid #ffe699;
 		}
 	</style>
-	<div id="status" style="display: none; padding: 10px 15px; margin: 10px 0 0 0; line-height: 1.5;"></div>	
+	<div id="statusLicense" style="display: none; padding: 10px 15px; margin: 10px 0 10px 0; line-height: 1.5;"></div>	
 	
-	<h2>Connected Accounts</h2>
+	<div id="connectedAccountsSection" style="display: none;">
+		<h2>Connected Accounts</h2>
+		
+		<p><input type="button" value="Connect to Salesforce" id="ConnectToSalesforce" /></p>
+		
+		<div id="statusConnect" style="display: none; padding: 10px 15px; margin: 10px 0 10px 0; line-height: 1.5;"></div>
+		
+		<div id="connectedAccountsShell"></div>
 	
-	<p><input type="button" value="Connect to Salesforce" id="ConnectToSalesforce" /></p>
-	
-	<div id="connectedAccountsShell"></div>
+	</div>
 
 	<script src="options.js"></script>
 </body>
