@@ -214,21 +214,23 @@ function init() {
 						{							
 							result.FormulaEditorAccessTokens = result.FormulaEditorAccessTokens || {};
 							
-							//DISCO COOKIE HAS LAST USER AND ORG SIGNED IN IN THE FORMAT BELOW
-							//5f:00D5f000001zCVL:0055f000000SNQf:1
-							var sDiscoCookie = readCookie("disco");
-							var oDiscoCookieParts = sDiscoCookie.split(":");
-							var sOrgId = oDiscoCookieParts[1];
-							sOrgId = convert15Idto18(sOrgId);
-							var sUserId = oDiscoCookieParts[2];	
-							sUserId = convert15Idto18(sUserId);							
+							//get latest org id for the salesforce domain (na62 for example or a company.my.salesforce.com)
+							var sOrdId = convert15Idto18(readCookie("oid"));
 							
 							//IF WE HAVE ACCESS TOKEN INFO ON FILE THEN CHECK IT, OTHERWISE LOAD THE FILES WITHOUT IT
+							var oAccessInfo = null;
 							var sAccessToken = "";
-							if (result.FormulaEditorAccessTokens.hasOwnProperty(sUserId+'_'+sOrgId))
+							for (var key in result.FormulaEditorAccessTokens)
 							{
-								var oAccessInfo = result.FormulaEditorAccessTokens[sUserId+'_'+sOrgId];								
-
+								//key is in the format sUserId+'_'+sOrgId but we aren't given the user id in any cookies so we just look it up based on org id
+								if (result.FormulaEditorAccessTokens.hasOwnProperty(key) && key.endsWith(sOrdId))
+								{
+									oAccessInfo = result.FormulaEditorAccessTokens[key];
+									break;
+								}
+							}
+							if (oAccessInfo != null)
+							{
 								chrome.runtime.sendMessage({type: "FormulaEditorAccessTokenCheck", data: oAccessInfo}, function(response)
 								{
 									oAccessInfo = response;
