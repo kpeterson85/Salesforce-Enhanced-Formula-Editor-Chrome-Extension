@@ -237,7 +237,7 @@ function FormulaEditAreaLoaded(sTextAreaId)
 	{
 		//ShowNewVersionMessage();
 		
-		var $fieldDetails = editorJQuery("<span class='formulaEditorFieldsLoadShell' style='float: left;'><input type='submit' class='btn formulaEditorFieldsLoad' value='Load Field Details' /><span class='formulaEditorTooltip' title='Loads details about the fields found in the formula.'>?</span></span><div class='formulaEditorFields' style='display: none;'><div class='fieldValuesPreviewShell' style='display: inline; text-align: right; float: right;'><input type='text' class='fieldValuesPreviewId' placeholder='Enter Record Id' /> <input type='button' class='fieldValuesPreviewButton btn' value='Load Record Values' /></div><div class='formulaEditorError' style='display: none; clear: both; background: #f8d7da; padding: 5px; border: 1px solid #ff808d; border-radius: 5px;'></div><table class='formulaEditorFieldsTable list'></table></div>");
+		var $fieldDetails = editorJQuery("<span class='formulaEditorFieldsLoadShell' style='float: left;'><input type='submit' class='btn formulaEditorFieldsLoad' value='Load Field Details' /><span class='formulaEditorTooltip' title='Loads details about the fields found in the formula.'>?</span></span><div class='formulaEditorFields' style='display: none;'><div class='fieldValuesPreviewShell' style='display: inline; text-align: right; float: right;'><input type='text' class='fieldValuesPreviewId' placeholder='Enter Record Id' /> <input type='button' class='fieldValuesPreviewButton btn' value='Load Record Values' /></div><div class='formulaEditorError' style='display: none; clear: both; background: #f8d7da; padding: 5px; border: 1px solid #ff808d; border-radius: 5px;'></div><div class='formulaEditorWarning' style='display: none; clear: both; color: #856404; background-color: #fff3cd; padding: 5px; border: 1px solid #ffe699; border-radius: 5px;'></div><table class='formulaEditorFieldsTable list'></table></div>");
 					
 		$loadButton = $fieldDetails.find("input.formulaEditorFieldsLoad");
 		$loadButton.data("formulaEditorSettings", oFormulaEditorSettings);
@@ -275,7 +275,7 @@ function FormulaEditAreaLoaded(sTextAreaId)
 			sOptionsURL = document.getElementById("hdnFormulaEditorOptionsURL").value;
 		}
 		var sOptionsConnectAccountURL = sOptionsURL + "?connect=1";
-		var sUnableToAccessAPI = "Unable to access the API. Please connect your account so that field and record data can be loaded.<br>" + "<a href='" + sOptionsConnectAccountURL + "' target='_blank' class='btn' style='color: #000; font-weight: normal; margin: 10px 5px 0px 0; display: inline-block; text-decoration: none; border: 1px solid #b5b5b5; background: #f3f2f2; border-radius: 3px; padding: 3px 4px;'>Connect Account</a>";
+		var sUnableToAccessAPI = "Unable to access the API. Please click the button below to grant the extension API access so field and record data can be loaded. Salesforce will prompt you to log in and accept/deny giving the Enhanced Formula Editor access.<br>" + "<a href='" + sOptionsConnectAccountURL + "' target='_blank' class='btn' style='color: #000; font-weight: normal; margin: 10px 5px 0px 0; display: inline-block; text-decoration: none; border: 1px solid #b5b5b5; background: #f3f2f2; border-radius: 3px; padding: 3px 4px;'>Grant Access</a>";
 		
 		if (oFormulaEditorSettings.ObjectId != "")
 		{
@@ -294,7 +294,7 @@ function FormulaEditAreaLoaded(sTextAreaId)
 					{
 						if (err.errorCode == "INVALID_SESSION_ID")
 						{
-							$fieldsShell.find(".formulaEditorError").show().html(sUnableToAccessAPI);
+							$fieldsShell.find(".formulaEditorWarning").show().html(sUnableToAccessAPI);
 						}
 						else
 						{
@@ -320,7 +320,7 @@ function FormulaEditAreaLoaded(sTextAreaId)
 				{
 					if (err.errorCode == "INVALID_SESSION_ID")
 					{
-						$fieldsShell.find(".formulaEditorError").show().html(sUnableToAccessAPI);
+						$fieldsShell.find(".formulaEditorWarning").show().html(sUnableToAccessAPI);
 					}
 					else
 					{
