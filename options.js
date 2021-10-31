@@ -280,6 +280,7 @@ function DisplayConnectedAccountsTable()
 			
 			sHTML += '</tbody></table>';
 			
+			//show the connected accounts table and section
 			document.getElementById('connectedAccountsShell').innerHTML = sHTML;
 			document.getElementById('connectedAccountsSection').style.display = 'block';
 		
@@ -288,7 +289,7 @@ function DisplayConnectedAccountsTable()
 			{
 				btnDelete.addEventListener("click", function()
 				{
-					var sKey = this.getAttribute('data-key');			
+					var sKey = this.getAttribute('data-key');
 
 					chrome.storage.sync.get(['FormulaEditorAccessTokens'], function(result)
 					{
@@ -296,20 +297,60 @@ function DisplayConnectedAccountsTable()
 						
 						result.FormulaEditorAccessTokens = result.FormulaEditorAccessTokens || {};
 						
+						var oAccessInfo = result.FormulaEditorAccessTokens[sKey];
+						
 						delete result.FormulaEditorAccessTokens[sKey];
 						
 						console.log("updating storage");
 						console.log(result.FormulaEditorAccessTokens);
-										
-						chrome.storage.sync.set({'FormulaEditorAccessTokens': result.FormulaEditorAccessTokens}, function()
+						
+						if (Object.keys(result.FormulaEditorAccessTokens).length > 0)
 						{
-							//console.log('Value is set to ' + value);
-							DisplayConnectedAccountsTable();
-						});
+							//IF WE STILL HAVE ACCESS TOKENS THEN UPDATE THE CHROME STORAGE ENTRY
+							chrome.storage.sync.set({'FormulaEditorAccessTokens': result.FormulaEditorAccessTokens}, function()
+							{
+								//console.log('Value is set to ' + value);
+								DisplayConnectedAccountsTable();
+							});
+						}
+						else
+						{
+							//IF WE DON'T HAVE ANY ACCESS TOKENS LEFT THEN DELETE THE CHROME STORAGE ENTRY
+							chrome.storage.sync.remove(['FormulaEditorAccessTokens'], function()
+							{
+								//console.log("removed");
+								DisplayConnectedAccountsTable();
+							});
+						}
+						
+						//the chrome storage updates above are async so this will run even while we are waiting for them to complete
+						//revoke the access/refresh tokens in Salesforce, do this last in case it fails for some reason we've at least forgotten the info in the extension and won't use it anymore
+						fetch('https://login.salesforce.com/services/oauth2/revoke', {
+							method: "POST",
+							headers: {
+								'Content-Type': 'application/x-www-form-urlencoded'
+							},
+							body: 'token=' + oAccessInfo.refresh_token
+						})
+						.then(function ()
+						{
+							console.log("refresh token revoked");
+						})
+						.catch(function (err)
+						{
+							console.log("error revoking refresh token");
+						});	
+						
 					});		
 				});
 			});
-		}	
+		}
+		else
+		{
+			//hide the connected accounts area
+			document.getElementById('connectedAccountsShell').innerHTML = "";
+			document.getElementById('connectedAccountsSection').style.display = 'none';
+		}
 		
 
 
