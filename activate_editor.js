@@ -275,7 +275,7 @@ function FormulaEditAreaLoaded(sTextAreaId)
 			sOptionsURL = document.getElementById("hdnFormulaEditorOptionsURL").value;
 		}
 		var sOptionsConnectAccountURL = sOptionsURL + "?connect=1";
-		var sUnableToAccessAPI = "Unable to access the API. Please click the button below to grant the extension API access so field and record data can be loaded. Salesforce will prompt you to log in and accept/deny giving the Enhanced Formula Editor access.<br>" + "<a href='" + sOptionsConnectAccountURL + "' target='_blank' class='btn' style='color: #000; font-weight: normal; margin: 10px 5px 0px 0; display: inline-block; text-decoration: none; border: 1px solid #b5b5b5; background: #f3f2f2; border-radius: 3px; padding: 3px 4px;'>Grant Access</a>";
+		var sUnableToAccessAPI = "Unable to access the Salesforce API. Please click the button below to grant the extension API access so field and record data can be loaded. Salesforce will prompt you to log in and accept/deny giving the Enhanced Formula Editor access.<br>" + "<a href='" + sOptionsConnectAccountURL + "' target='_blank' class='btn' style='color: #000; font-weight: normal; margin: 10px 5px 0px 0; display: inline-block; text-decoration: none; border: 1px solid #b5b5b5; background: #f3f2f2; border-radius: 3px; padding: 3px 4px;'>Grant Access</a>";
 		
 		if (oFormulaEditorSettings.ObjectId != "")
 		{

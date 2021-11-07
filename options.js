@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', function()
 		}
 	});
 	
-	DisplayConnectedAccountsTable();	
+	DisplayConnectedAccountsTable(false);	
 	
 	var code = getURLParameter('code');
 	var state = getURLParameter('state'); //contains the original login url
@@ -81,7 +81,7 @@ document.addEventListener('DOMContentLoaded', function()
 					chrome.storage.sync.set({'FormulaEditorAccessTokens': result.FormulaEditorAccessTokens}, function()
 					{
 						//console.log('Value is set to ' + value);
-						DisplayConnectedAccountsTable();
+						DisplayConnectedAccountsTable(false);
 						
 						document.getElementById("statusConnect").innerHTML = "You successfully connected your account!<br><br>You may need to refresh Salesforce formula pages for the update to take effect.";
 						document.getElementById("statusConnect").classList.remove("error");
@@ -109,6 +109,17 @@ document.addEventListener('DOMContentLoaded', function()
 			document.getElementById("statusLicense").style.display = "block";
 		});		
 		
+	}
+	
+	var error = getURLParameter('error');
+	if (error != null)
+	{
+		DisplayConnectedAccountsTable(true);
+		
+		document.getElementById("statusConnect").innerHTML = "Access was not granted.";
+		document.getElementById("statusConnect").classList.remove("success");
+		document.getElementById("statusConnect").classList.add("error");
+		document.getElementById("statusConnect").style.display = "block";
 	}
 	
 	document.getElementById('licenseForm').addEventListener('submit', function(e)
@@ -187,6 +198,10 @@ document.addEventListener('DOMContentLoaded', function()
 	function RedirectToSalesforceToConnect()
 	{
 		var server = 'https://login.salesforce.com';
+		if (document.getElementById("grantAccessServerType").value == "1")
+		{
+			server = 'https://test.salesforce.com';
+		}
 		var scopes = ['web','api','refresh_token'];
 		//User Agent Flow
 		var url = server+'/services/oauth2/authorize?response_type=code'
@@ -204,7 +219,13 @@ document.addEventListener('DOMContentLoaded', function()
 		window.location.href = url;
 	}
 	
-	document.getElementById('ConnectToSalesforce').addEventListener('click', function(e)
+	document.getElementById('ShowGrantAccessPopup').addEventListener('click', function(e)
+	{
+		document.getElementById('grantPopupOverlay').style.display = "";
+		document.getElementById('grantPopup').style.display = "";
+	});	
+	
+	document.getElementById('GrantAccess').addEventListener('click', function(e)
 	{
 		RedirectToSalesforceToConnect();
 	});
@@ -212,7 +233,7 @@ document.addEventListener('DOMContentLoaded', function()
 	var connect = getURLParameter('connect');
 	if (connect != null && connect == "1")
 	{
-		RedirectToSalesforceToConnect();
+		document.getElementById('ShowGrantAccessPopup').click();
 	}
 });
 
@@ -220,7 +241,7 @@ function getURLParameter(name) {
 	return decodeURIComponent((new RegExp('[?|&]' + name + '=' + '([^&;]+?)(&|#|;|$)').exec(location.search) || [null, ''])[1].replace(/\+/g, '%20')) || null;
 }
 
-function DisplayConnectedAccountsTable()
+function DisplayConnectedAccountsTable(bForceShowAccountsSection)
 {
 	chrome.storage.sync.get(['FormulaEditorAccessTokens'], function(result)
 	{
@@ -232,6 +253,7 @@ function DisplayConnectedAccountsTable()
 			+'<th scope="col">User</th>'
 			+'<th scope="col">Email</th>'
 			+'<th scope="col">Instance URL</th>'
+			+'<th scope="col">Org Id</th>'
 			+'<th scope="col"/>'
 			+'<tr></thead><tbody>';
 
@@ -244,7 +266,7 @@ function DisplayConnectedAccountsTable()
 		
 		//IF WE FOUND ENTRIES FOR CONNECTED ACCOUNTS THEN LOAD THEM ON THE PAGE, OTHERWISE DON'T SHOW THE SECTION BECAUSE NOT ALL
 		//USERS USE THE CONNECTED ACCOUNTS FEATURE (IF THE SID SESSION COOKIE IS AVAILABLE)
-		if (sorted.length > 0)
+		if (sorted.length > 0 || bForceShowAccountsSection == true)
 		{
 			sorted.sort(function(a,b)
 			{
@@ -272,6 +294,7 @@ function DisplayConnectedAccountsTable()
 						+'</td>'
 						+'<td>' + sorted[i].username + '</td>'
 						+'<td >'+instance+'</td>'
+						+'<td >'+ sorted[i].orgId +'</td>'
 						+'<td><button class="btn-delete" data-key="' + sorted[i].userId + '_' + sorted[i].orgId + '">Delete</button></td>'
 					+'</tr>';
 
@@ -310,7 +333,7 @@ function DisplayConnectedAccountsTable()
 							chrome.storage.sync.set({'FormulaEditorAccessTokens': result.FormulaEditorAccessTokens}, function()
 							{
 								//console.log('Value is set to ' + value);
-								DisplayConnectedAccountsTable();
+								DisplayConnectedAccountsTable(false);
 							});
 						}
 						else
@@ -319,13 +342,18 @@ function DisplayConnectedAccountsTable()
 							chrome.storage.sync.remove(['FormulaEditorAccessTokens'], function()
 							{
 								//console.log("removed");
-								DisplayConnectedAccountsTable();
+								DisplayConnectedAccountsTable(false);
 							});
 						}
 						
 						//the chrome storage updates above are async so this will run even while we are waiting for them to complete
 						//revoke the access/refresh tokens in Salesforce, do this last in case it fails for some reason we've at least forgotten the info in the extension and won't use it anymore
-						fetch('https://login.salesforce.com/services/oauth2/revoke', {
+						var server = 'https://login.salesforce.com';
+						if (oAccessInfo.id.indexOf("test.salesforce.com") != -1)
+						{
+							server = 'https://test.salesforce.com';
+						}
+						fetch(server + '/services/oauth2/revoke', {
 							method: "POST",
 							headers: {
 								'Content-Type': 'application/x-www-form-urlencoded'

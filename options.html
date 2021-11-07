@@ -32,12 +32,25 @@
 	<div id="connectedAccountsSection" style="display: none;">
 		<h2>Connected Accounts</h2>
 		
-		<p><input type="button" value="Connect to Salesforce" id="ConnectToSalesforce" /></p>
+		<p><input type="button" value="Grant Access to Another Account" id="ShowGrantAccessPopup" /></p>
 		
 		<div id="statusConnect" style="display: none; padding: 10px 15px; margin: 10px 0 10px 0; line-height: 1.5;"></div>
 		
 		<div id="connectedAccountsShell"></div>
 	
+	</div>
+	
+	<div id="grantPopupOverlay" style="display: none; position: absolute; background: rgba(0,0,0,.5); top: 0; right: 0; left: 0; bottom: 0;"></div>
+	<div id="grantPopup" style="display: none; position: fixed; top: 50%; background: #FFF; padding: 20px; left: 50%; width: 300px; margin-left: -150px; height: 100px; margin-top: -50px;">
+		<p>Select the type of org to grant access for.</p>
+		<label>
+			Org Type:
+			<select id="grantAccessServerType">
+				<option value="0">Production / Developer</option>
+				<option value="1">Sandbox</option>
+			</select>
+			<p><input type="button" value="Grant Access" id="GrantAccess" /> <input type="button" value="Close Popup" id="CloseGrantPopup" /></p>
+		</label>
 	</div>
 
 	<script src="options.js"></script>
