@@ -39,8 +39,8 @@ document.addEventListener('DOMContentLoaded', function()
 		.then((res) => res.json())
 		.then(function (data)
 		{
-			console.log("access token");
-			console.log(data);
+			//console.log("access token");
+			//console.log(data);
 			
 			oAccessInfo = data;
 			
@@ -57,15 +57,15 @@ document.addEventListener('DOMContentLoaded', function()
 			.then((res) => res.json())
 			.then(function (data)
 			{
-				console.log("user info");
-				console.log(data);
+				//console.log("user info");
+				//console.log(data);
 			
 				oAccessInfo.username = data.username;
 				oAccessInfo.first_name = data.first_name;
 				oAccessInfo.last_name = data.last_name;
 				
-				console.log("final access object");
-				console.log(oAccessInfo);
+				//console.log("final access object");
+				//console.log(oAccessInfo);
 				
 				chrome.storage.sync.get(['FormulaEditorAccessTokens'], function(result)
 				{
@@ -75,8 +75,8 @@ document.addEventListener('DOMContentLoaded', function()
 					
 					result.FormulaEditorAccessTokens[oAccessInfo.userId+'_'+oAccessInfo.orgId] = oAccessInfo;
 					
-					console.log("updating storage");
-					console.log(result.FormulaEditorAccessTokens);
+					//console.log("updating storage");
+					//console.log(result.FormulaEditorAccessTokens);
 									
 					chrome.storage.sync.set({'FormulaEditorAccessTokens': result.FormulaEditorAccessTokens}, function()
 					{
@@ -98,6 +98,7 @@ document.addEventListener('DOMContentLoaded', function()
 				document.getElementById("statusLicense").classList.remove("success");
 				document.getElementById("statusLicense").classList.add("error");
 				document.getElementById("statusLicense").style.display = "block";
+				console.log(err);
 			});
 			
 		})
@@ -107,8 +108,8 @@ document.addEventListener('DOMContentLoaded', function()
 			document.getElementById("statusLicense").classList.remove("success");
 			document.getElementById("statusLicense").classList.add("error");
 			document.getElementById("statusLicense").style.display = "block";
+			console.log(err);
 		});		
-		
 	}
 	
 	var error = getURLParameter('error');
@@ -224,6 +225,12 @@ document.addEventListener('DOMContentLoaded', function()
 		document.getElementById('grantPopupOverlay').style.display = "";
 		document.getElementById('grantPopup').style.display = "";
 	});	
+	
+	document.getElementById('CloseGrantPopup').addEventListener('click', function(e)
+	{
+		document.getElementById('grantPopupOverlay').style.display = "none";
+		document.getElementById('grantPopup').style.display = "none";
+	});
 	
 	document.getElementById('GrantAccess').addEventListener('click', function(e)
 	{
