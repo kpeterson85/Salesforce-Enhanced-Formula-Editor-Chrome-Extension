@@ -283,7 +283,18 @@ function FormulaEditAreaLoaded(sTextAreaId)
 			jsforceConnection.tooling.sobject('CustomObject')
 			.find({ Id: oFormulaEditorSettings.ObjectId })
 			.execute(function(err, records) {
-				if (err) { return console.error(err); }
+				if (err)
+				{
+					if (err.errorCode == "INVALID_SESSION_ID")
+					{
+						$fieldsShell.find(".formulaEditorWarning").show().html(sUnableToAccessAPI);
+					}
+					else
+					{
+						$fieldsShell.find(".formulaEditorError").show().html("Error describing object '" + oFormulaEditorSettings.ObjectId + "'. It may only be accessible from a newer version of the API or you may not have meta data api access. Error message: " + err.message);
+					}
+					return console.error(err); //STOP FROM GOING ANY FURTHER SINCE WE WON'T BE ABLE TO DESCRIBE THE FIELDS
+				}
 				//console.log("fetched : " + records[0]);
 				oFormulaEditorSettings.ObjectAPIName = records[0].DeveloperName + "__c";
 				
