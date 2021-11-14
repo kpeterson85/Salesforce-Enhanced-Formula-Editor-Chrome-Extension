@@ -215,18 +215,23 @@ function init() {
 							result.FormulaEditorAccessTokens = result.FormulaEditorAccessTokens || {};
 							
 							//get latest org id for the salesforce domain (na62 for example or a company.my.salesforce.com)
-							var sOrdId = convert15Idto18(readCookie("oid"));
+							var sOrgId = readCookie("oid");
 							
 							//IF WE HAVE ACCESS TOKEN INFO ON FILE THEN CHECK IT, OTHERWISE LOAD THE FILES WITHOUT IT
 							var oAccessInfo = null;
 							var sAccessToken = "";
-							for (var key in result.FormulaEditorAccessTokens)
+							
+							if (sOrgId != null && sOrgId != "")
 							{
-								//key is in the format sUserId+'_'+sOrgId but we aren't given the user id in any cookies so we just look it up based on org id
-								if (result.FormulaEditorAccessTokens.hasOwnProperty(key) && key.endsWith(sOrdId))
+								sOrgId = convert15Idto18(sOrgId);
+								for (var key in result.FormulaEditorAccessTokens)
 								{
-									oAccessInfo = result.FormulaEditorAccessTokens[key];
-									break;
+									//key is in the format sUserId+'_'+sOrgId but we aren't given the user id in any cookies so we just look it up based on org id
+									if (result.FormulaEditorAccessTokens.hasOwnProperty(key) && key.endsWith(sOrgId))
+									{
+										oAccessInfo = result.FormulaEditorAccessTokens[key];
+										break;
+									}
 								}
 							}
 							if (oAccessInfo != null)
