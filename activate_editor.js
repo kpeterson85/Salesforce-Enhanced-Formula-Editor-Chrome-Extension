@@ -191,6 +191,8 @@ function ActivateEditor(oFormulaEditorSettings)
 			,is_editable: oFormulaEditorSettings.TextAreaEditorEditable
 			,parent: oFormulaEditorSettings.ParentElement
 			,fullscreen: oFormulaEditorSettings.Popup
+			,plugins: "autocompletion"
+			,autocompletion: true
 		});
 	}
 }
@@ -376,6 +378,36 @@ function FormulaEditAreaLoaded(sTextAreaId)
 	  });
 	  editorJQuery("#" + sTextAreaId).next("iframe").contents().find("#toolbar_1").prepend($formatButton);
   }
+  
+  //SETUP AUTO COMPLETION
+  if (typeof(fieldTreeController) != "undefined")
+  {
+	  for (var r = 0; r < fieldTreeController.tree.rootList.length; r++)
+	  {
+		  var rootNode = fieldTreeController.tree.rootList[r];		  
+		  LoadAutoCompleteNode(rootNode);
+	  }
+	  
+	  //delete the currently loaded auto completion data so our dynamically loaded data will be loaded
+	  delete editAreaLoader.syntax.forceformula.autocompletion;
+  }
+}
+
+function LoadAutoCompleteNode(oNode)
+{
+	editAreaLoader.load_syntax["forceformula"].AUTO_COMPLETION.default.KEYWORDS[oNode.key] = [];
+	if (oNode.hasOwnProperty("children") == true)
+	{
+		for (var c = 0; c < oNode.children.length; c++)
+		{
+			editAreaLoader.load_syntax["forceformula"].AUTO_COMPLETION.default.KEYWORDS[oNode.key].push([oNode.children[c].key])
+			//if its a parent and we haven't seen it yet then load it
+			if (oNode.children[c].hasOwnProperty("children") && editAreaLoader.load_syntax["forceformula"].AUTO_COMPLETION.default.KEYWORDS.hasOwnProperty(oNode.children[c].key) == false)
+			{
+				LoadAutoCompleteNode(oNode.children[c]);
+			}
+		}
+	}
 }
 
 function FormulaEditAreaResized(sTextAreaId)
