@@ -193,6 +193,7 @@ function ActivateEditor(oFormulaEditorSettings)
 			,fullscreen: oFormulaEditorSettings.Popup
 			,plugins: "autocompletion"
 			,autocompletion: true
+			,toolbar: "search,go_to_line,fullscreen,word_wrap,|,undo,redo,|,select_font"
 		});
 	}
 }
@@ -381,31 +382,101 @@ function FormulaEditAreaLoaded(sTextAreaId)
   
   //SETUP AUTO COMPLETION
   if (typeof(fieldTreeController) != "undefined")
-  {
+  {	  
+	  editAreaLoader.load_syntax["forceformula"].AUTO_COMPLETION.default.KEYWORDS[""] = [];
+	  var oEntriesLoaded = {}; //used as hash table to know what objects/fields have already been loaded so we don't add them multiple times
+	  
+	  //LOAD OBJECT FIELDS AND SYSTEM VALUES
 	  for (var r = 0; r < fieldTreeController.tree.rootList.length; r++)
 	  {
 		  var rootNode = fieldTreeController.tree.rootList[r];		  
-		  LoadAutoCompleteNode(rootNode);
+		  
+		  var sChildrenPrefix = "";
+		  
+		  //r=0 IS THE OBJECT WE ARE CURRENTLY CREATING A FORMULA ON, WE DO NOT ADD AN ENTRY FOR ITS NAME SINCE WE JUST TYPE ITS FIELD NAMES DIRECTLY IN THE FORMULA WITH NO PREFIX
+		  //LIKE WHEN ON AN ACCOUNT FORMULA, YOU JUST TYPE Id, NOT Account.Id
+		  if (r != 0)
+		  {
+			//THESE ARE ENTRIES LIKE SYSTEM VARIABLES $Api, $User, etc.
+			//ADD THEM UNDER THE "" PREFIX BECAUSE WE WANT IT TO BE AVAILABLE WITHOUT TYPING ANYTHING BEFORE IT
+			editAreaLoader.load_syntax["forceformula"].AUTO_COMPLETION.default.KEYWORDS[""].push([rootNode.key])
+			
+			sChildrenPrefix = rootNode.key;
+		  }
+		  
+		  LoadAutoCompleteNode(sChildrenPrefix, rootNode, oEntriesLoaded);
+	  }
+	  
+	  //LOAD FUNCTION DEFINITIONS
+	  if (typeof(functionNameToPrototypeMap) != "undefined")
+	  {
+		  for (var prop in functionNameToPrototypeMap)
+		  {
+			  if (functionNameToPrototypeMap.hasOwnProperty(prop))
+			  {
+				var insertValue = functionNameToPrototypeMap[prop].toString();
+				insertValue = insertValue.replace(prop, "~"); //THE FUNCTION NAME BECOMES THE TILDE BECAUSE TILDE IS REPLACED WITH THEIR TYPED WORD
+				insertValue = insertValue.replace("(", "({@}"); //ADD {@} WHERE THE CURSOR SHOULD GO AFTER INSERTED, WHICH IS AFTER THE FIRST OPEN PAREN
+				editAreaLoader.load_syntax["forceformula"].AUTO_COMPLETION.default.KEYWORDS[""].push([prop, insertValue, prop + '<span class=\'datatype\' style=\'float: right; display: inline-block; padding-left: 10px;\'>Function</span>']);
+			  }
+			  
+		  }
 	  }
 	  
 	  //delete the currently loaded auto completion data so our dynamically loaded data will be loaded
 	  delete editAreaLoader.syntax.forceformula.autocompletion;
+	  
+	  //console.log(oEntriesLoaded);
   }
 }
 
-function LoadAutoCompleteNode(oNode)
-{
-	editAreaLoader.load_syntax["forceformula"].AUTO_COMPLETION.default.KEYWORDS[oNode.key] = [];
+function LoadAutoCompleteNode(sChildrenPrefix, oNode, oEntriesLoaded)
+{	
+	if (typeof(editAreaLoader.load_syntax["forceformula"].AUTO_COMPLETION.default.KEYWORDS[sChildrenPrefix]) == "undefined")
+	{
+		editAreaLoader.load_syntax["forceformula"].AUTO_COMPLETION.default.KEYWORDS[sChildrenPrefix] = [];
+	}
 	if (oNode.hasOwnProperty("children") == true)
 	{
 		for (var c = 0; c < oNode.children.length; c++)
 		{
-			editAreaLoader.load_syntax["forceformula"].AUTO_COMPLETION.default.KEYWORDS[oNode.key].push([oNode.children[c].key])
-			//if its a parent and we haven't seen it yet then load it
-			if (oNode.children[c].hasOwnProperty("children") && editAreaLoader.load_syntax["forceformula"].AUTO_COMPLETION.default.KEYWORDS.hasOwnProperty(oNode.children[c].key) == false)
+			var sType = "";
+			if (typeof(oNode.children[c].attributes) != "undefined" && oNode.children[c].attributes != null && typeof(oNode.children[c].attributes.type) != "undefined")
 			{
-				LoadAutoCompleteNode(oNode.children[c]);
+				sType = oNode.children[c].attributes.type;
 			}
+			
+			var bEntryExists = false;
+			if (sChildrenPrefix != "")
+			{
+				if (oEntriesLoaded.hasOwnProperty(sChildrenPrefix))
+				{
+					if (oEntriesLoaded[sChildrenPrefix].hasOwnProperty(oNode.children[c].key) == true)
+					{
+						bEntryExists = true;
+					}
+				}
+				else
+				{
+					oEntriesLoaded[sChildrenPrefix] = {}
+				}
+			}
+			
+			if (bEntryExists == false)
+			{
+				editAreaLoader.load_syntax["forceformula"].AUTO_COMPLETION.default.KEYWORDS[sChildrenPrefix].push([oNode.children[c].key, '', oNode.children[c].key + '<span class=\'datatype\' style=\'float: right; display: inline-block; padding-left: 10px;\'>' + sType + '</span>'])
+				if (sChildrenPrefix != "")
+				{
+					oEntriesLoaded[sChildrenPrefix][oNode.children[c].key] = true;
+				}				
+				
+				//if its a parent and we haven't seen it yet then load it
+				if (oNode.children[c].hasOwnProperty("children") && editAreaLoader.load_syntax["forceformula"].AUTO_COMPLETION.default.KEYWORDS.hasOwnProperty(oNode.children[c].key) == false)
+				{
+					LoadAutoCompleteNode(oNode.children[c].key, oNode.children[c], oEntriesLoaded);
+				}
+			}
+			
 		}
 	}
 }

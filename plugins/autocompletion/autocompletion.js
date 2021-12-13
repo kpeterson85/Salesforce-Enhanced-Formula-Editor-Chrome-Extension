@@ -71,7 +71,10 @@ var EditArea_autocompletion= {
 		
 		this.container	= document.createElement('div');
 		this.container.id	= "auto_completion_area";
-		editArea.container.insertBefore( this.container, editArea.container.firstChild );
+		
+		//UPDATED AUTO COMPLETE BOX TO BE BEFORE THE CONTAINER BECAUSE OTHERWISE USERS CAN'T SEE THE FULL AUTO COMPLETE LIST IF THE 
+		//CONTAINER TEXT DOES NOT HAVE MANY LINES
+		editArea.container.parentElement.insertBefore( this.container, editArea.container );
 		
 		// add event detection for hiding suggestion box
 		parent.editAreaLoader.add_event( document, "click", function(){ editArea.plugins['autocompletion']._hide();} );
@@ -256,12 +259,12 @@ var EditArea_autocompletion= {
 		// retrive the number of matching characters
 		var start_index	= Math.max( 0, editArea.textarea.selectionEnd - content.length );
 		
-		line_string	= 	editArea.textarea.value.substring( start_index, editArea.textarea.selectionEnd + 1);
-		limit	= line_string.length -1;
+		line_string	= 	editArea.textarea.value.substring( start_index, editArea.textarea.selectionEnd);
+		limit	= line_string.length;
 		nbMatch	= 0;
 		for( i =0; i<limit ; i++ )
-		{
-			if( line_string.substring( limit - i - 1, limit ) == content.substring( 0, i + 1 ) )
+		{				
+			if( line_string.substring( limit - i - 1, limit ).toLowerCase() == content.substring( 0, i + 1 ).toLowerCase() )
 				nbMatch = i + 1;
 		}
 		// if characters match, we should include them in the selection that will be replaced
@@ -463,8 +466,11 @@ var EditArea_autocompletion= {
 				for(var i=0; i<results.length; i++)
 				{
 					var line= "<li><a href=\"#\" class=\"entry\" onmousedown=\"EditArea_autocompletion._select('"+ results[i][1]['replace_with'].replace(new RegExp('"', "g"), "&quot;") +"');return false;\">"+ results[i][1]['comment'];
+					/*
+					COMMENTED OUT INCLUDING THE PREFIX BECAUSE PEOPLE CAN SEE TO THE LEFT OF WHAT THEY'RE TYPING FOR PREFIX THEY ARE UNDER
 					if(results[i][0]['prefix_name'].length>0)
 						line+='<span class="prefix">'+ results[i][0]['prefix_name'] +'</span>';
+					*/
 					line+='</a></li>';
 					lines[lines.length]=line;
 				}
