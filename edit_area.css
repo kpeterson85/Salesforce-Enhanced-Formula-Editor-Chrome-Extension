@@ -287,7 +287,7 @@ div#area_search_replace  #area_search_msg{
     font-size: 7pt;
     font-weight: normal;
     margin: 2px 0 0 0 ;
-    padding: 0;
+    padding: 2px 0;
     vertical-align: top;
     background-color: #F0F0EE;
 }
@@ -510,6 +510,8 @@ table.statusbar{
 	color:		#000;
 	text-decoration:none;
 }
+
+#auto_completion_area .autocomplete_highlight { font-weight: bold; }
 
 #auto_completion_area a:hover, #auto_completion_area a:focus, #auto_completion_area a.focus
 {

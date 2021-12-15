@@ -385,7 +385,7 @@ var EditArea_autocompletion= {
 					if( match_word )
 					{
 						var begin_word= match_word[1];
-						var match_curr_word= new RegExp("^"+ parent.editAreaLoader.get_escaped_regexp( begin_word ), this.curr_syntax[i]["modifiers"]);
+						var match_curr_word= new RegExp(parent.editAreaLoader.get_escaped_regexp( begin_word ), this.curr_syntax[i]["modifiers"]);
 						//console.log( match_curr_word );
 						for(var prefix in this.curr_syntax[i]["keywords"])
 						{
@@ -465,7 +465,7 @@ var EditArea_autocompletion= {
 				var lines=[];
 				for(var i=0; i<results.length; i++)
 				{
-					var line= "<li><a href=\"#\" class=\"entry\" onmousedown=\"EditArea_autocompletion._select('"+ results[i][1]['replace_with'].replace(new RegExp('"', "g"), "&quot;") +"');return false;\">"+ results[i][1]['comment'];
+					var line= "<li><a href=\"#\" class=\"entry\" onmousedown=\"EditArea_autocompletion._select('"+ results[i][1]['replace_with'].replace(new RegExp('"', "g"), "&quot;") +"');return false;\">"+ results[i][1]['comment'].replace(match_curr_word, "<span class='autocomplete_highlight'>$&</span>");
 					/*
 					COMMENTED OUT INCLUDING THE PREFIX BECAUSE PEOPLE CAN SEE TO THE LEFT OF WHAT THEY'RE TYPING FOR PREFIX THEY ARE UNDER
 					if(results[i][0]['prefix_name'].length>0)
