@@ -487,6 +487,10 @@
 				if(this.settings["EA_font_size_changed_callback"].length>0)
 					return eval("parent."+this.settings["EA_font_size_changed_callback"]+"(param);");
 				break;
+			case "EA_font_family_changed":
+				if(this.settings["EA_font_family_changed_callback"].length>0)
+					return eval("parent."+this.settings["EA_font_family_changed_callback"]+"(param);");
+				break;
 			
 			default:
 				if(typeof(eval("editArea."+cmd))=="function")

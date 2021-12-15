@@ -55,6 +55,7 @@ function ActivateWhenTextFieldsVisible(eTextfield)
 				TextAreaEditorEditable: true,
 				TextAreaEditorResizedCallback: "FormulaEditAreaResized",
 				TextAreaEditorFontSizeChangedCallback: "FormulaEditAreaFontSizeChanged",
+				TextAreaEditorFontFamilyChangedCallback: "FormulaEditAreaFontFamilyChanged",
 				OverrideInsertButtons: true,
 				LoadFieldDetailsAfterSelector: ".formulaFooter",
 				ParentElement: parent
@@ -139,6 +140,7 @@ function ActivateEditor(oFormulaEditorSettings)
 		TextAreaEditorEditable: true,
 		TextAreaEditorResizedCallback: "",
 		TextAreaEditorFontSizeChangedCallback: "",
+		TextAreaEditorFontFamilyChangedCallback: "",
 		Popup: false,
 		ObjectId: "",
 		ObjectAPIName: "",
@@ -160,10 +162,16 @@ function ActivateEditor(oFormulaEditorSettings)
 	editorJQuery("#" + oFormulaEditorSettings.TextAreaId, oFormulaEditorSettings.ParentElement).width(oFormulaEditorSettings.TextAreaEditorStartWidth);
 	editorJQuery("#" + oFormulaEditorSettings.TextAreaId, oFormulaEditorSettings.ParentElement).height(oFormulaEditorSettings.TextAreaEditorStartHeight);
 	
-	var sFontSize = "8";
+	var sFontSize = "9";
 	if (typeof(localStorage['FormulaEditorFontSize']) != "undefined")
 	{
 		sFontSize = localStorage['FormulaEditorFontSize'];
+	}
+	
+	var sFontFamily = "Verdana";
+	if (typeof(localStorage['FormulaEditorFontFamily']) != "undefined")
+	{
+		sFontFamily = localStorage['FormulaEditorFontFamily'];
 	}
 	
 	FormulaEditAreaInit();
@@ -180,20 +188,21 @@ function ActivateEditor(oFormulaEditorSettings)
 			,syntax: "forceformula"
 			,replace_tab_by_spaces: 2
 			,font_size: sFontSize
-			,font_family: "verdana, monospace"
+			,font_family: sFontFamily
 			,min_height: oFormulaEditorSettings.TextAreaEditorMinHeight
 			,min_width: oFormulaEditorSettings.TextAreaEditorMinWidth		
 			,show_line_colors: true
 			,EA_load_callback: "FormulaEditAreaLoaded"
 			,EA_resized_callback: oFormulaEditorSettings.TextAreaEditorResizedCallback
 			,EA_font_size_changed_callback: oFormulaEditorSettings.TextAreaEditorFontSizeChangedCallback
+			,EA_font_family_changed_callback: oFormulaEditorSettings.TextAreaEditorFontFamilyChangedCallback
 			,display: oFormulaEditorSettings.TextAreaEditorDisplay
 			,is_editable: oFormulaEditorSettings.TextAreaEditorEditable
 			,parent: oFormulaEditorSettings.ParentElement
 			,fullscreen: oFormulaEditorSettings.Popup
 			,plugins: "autocompletion"
 			,autocompletion: true
-			,toolbar: "search,go_to_line,fullscreen,word_wrap,|,undo,redo,|,select_font"
+			,toolbar: "search,go_to_line,fullscreen,word_wrap,|,undo,redo,|,select_fontfamily,select_fontsize"
 		});
 	}
 }
@@ -490,6 +499,11 @@ function FormulaEditAreaResized(sTextAreaId)
 function FormulaEditAreaFontSizeChanged(sFontSize)
 {
 	localStorage['FormulaEditorFontSize'] = sFontSize;
+}
+
+function FormulaEditAreaFontFamilyChanged(sFontFamily)
+{
+	localStorage['FormulaEditorFontFamily'] = sFontFamily;
 }
 
 //http://stackoverflow.com/questions/2399389/detect-chrome-extension-first-run-update

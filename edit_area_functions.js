@@ -64,6 +64,16 @@
 			}
 		}
 		
+		// update the select tag
+		if( elem_font = _$("area_font_family") )
+		{	
+			for( i = 0; i < elem_font.length; i++ )
+			{
+				if( elem_font.options[i].value && elem_font.options[i].value == s["font_family"] )
+					elem_font.options[i].selected=true;
+			}
+		}
+		
 		/*
 		 * somethimes firefox has rendering mistake with non-monospace font for text width in textarea vs in div for changing font size (eg: verdana change between 11pt to 12pt)
 		 * => looks like a browser internal random bug as text width can change while content_highlight is updated
@@ -150,6 +160,7 @@
 		this.update_size();
 		this.check_line_selection();
 		
+		this.execCommand("EA_font_family_changed", s["font_family"]);
 		this.execCommand("EA_font_size_changed", s["font_size"]);
 	};
 	
@@ -157,6 +168,12 @@
 		var size=_$("area_font_size").value;
 		if(size>0)
 			this.set_font("", size);			
+	};
+	
+	EditArea.prototype.change_font_family= function(){
+		var family=_$("area_font_family").value;
+		if(family != "")
+			this.set_font(family, 0);			
 	};
 	
 	

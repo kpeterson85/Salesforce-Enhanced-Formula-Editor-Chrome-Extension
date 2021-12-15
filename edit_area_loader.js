@@ -666,7 +666,20 @@ EditAreaLoader.prototype ={
 			case "|":
 		  	case "separator":
 				return '<img src="'+ t.baseURL +'images/spacer.gif" width="1" height="15" class="editAreaSeparatorLine">';
-			case "select_font":
+			case "select_fontfamily":
+				html= "<select id='area_font_family' data-editor-onchange='javascript:editArea.execCommand(\"change_font_family\")' fileSpecific='yes'>";
+				html+="<option value=''>{$font_family}</option>";
+				si=["Arial","Verdana","Helvetica","Tahoma","Trebuchet","Georgia","\'Courier New\'"];
+				html+="<option value='Arial'>Arial</option>";
+				html+="<option value='Verdana'>Verdana</option>";
+				html+="<option value='Helvetica'>Helvetica</option>";
+				html+="<option value='Tahoma'>Tahoma</option>";
+				html+="<option value='Trebuchet'>Trebuchet</option>";
+				html+="<option value='Georgia'>Georgia</option>";
+				html+="<option value=\"'Courier New'\,Courier,monospace\">Courier New</option>";
+				html+="</select>";
+				return html;
+			case "select_fontsize":
 				html= "<select id='area_font_size' data-editor-onchange='javascript:editArea.execCommand(\"change_font_size\")' fileSpecific='yes'>";
 				html+="<option value='-1'>{$font_size}</option>";
 				si=[8,9,10,11,12,14];
