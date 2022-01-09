@@ -52,7 +52,7 @@ editAreaLoader.load_syntax["forceformula"] = {
 	}	
 	,'AUTO_COMPLETION' :  {
 		"default": {	// the name of this definition group. It's posisble to have different rules inside the same definition file
-			"REGEXP": { "before_word": "[^a-zA-Z0-9_\$]|^"	// \\s|\\.|
+			"REGEXP": { "before_word": "[^a-zA-Z0-9_\$]"	// \\s|\\.|
 						,"possible_words_letters": "[a-zA-Z0-9_\$]+"
 						,"letter_after_word_must_match": "[^a-zA-Z0-9_]|$"
 						,"prefix_separator": "\\."

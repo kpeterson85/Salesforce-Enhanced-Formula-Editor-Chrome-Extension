@@ -256,17 +256,26 @@ var EditArea_autocompletion= {
 		content	= content.replace(/{@}/g, '' );
 		editArea.getIESelection();
 		
-		// retrive the number of matching characters
-		var start_index	= Math.max( 0, editArea.textarea.selectionEnd - content.length );
-		
-		line_string	= 	editArea.textarea.value.substring( start_index, editArea.textarea.selectionEnd);
-		limit	= line_string.length;
-		nbMatch	= 0;
-		for( i =0; i<limit ; i++ )
-		{				
-			if( line_string.substring( limit - i - 1, limit ).toLowerCase() == content.substring( 0, i + 1 ).toLowerCase() )
-				nbMatch = i + 1;
+		//start where the cursor is and look backwards at the characters before it to identify what
+		//characters we will be replacing. when we find a character that is not a word character (like space, newline)
+		//we know we should stop and use all the characters before the non-word character.
+		var str	= editArea.textarea.value;
+		var iCursorLocation = editArea.textarea.selectionEnd;
+		if (iCursorLocation > 0)
+		{			
+			var iLettersBack = 1;	
+			var lead_char = str.substring(iCursorLocation-iLettersBack, iCursorLocation-iLettersBack+1);
+			var good_lead_char = this.curr_syntax["default"]["before_word"].test(lead_char) || lead_char == "";
+			while (good_lead_char == false)
+			{
+				iLettersBack += 1;
+				lead_char = str.substring(iCursorLocation-iLettersBack, iCursorLocation-iLettersBack+1);
+				good_lead_char = this.curr_syntax["default"]["before_word"].test(lead_char) || lead_char == "";
+			}
+			
+			nbMatch = iLettersBack - 1;
 		}
+		
 		// if characters match, we should include them in the selection that will be replaced
 		if( nbMatch > 0 )
 			parent.editAreaLoader.setSelectionRange(editArea.id, editArea.textarea.selectionStart - nbMatch , editArea.textarea.selectionEnd);
@@ -307,7 +316,8 @@ var EditArea_autocompletion= {
 							tmp["modifiers"]="";
 						tmp["prefix_separator"]= datas["REGEXP"]["prefix_separator"];
 						tmp["match_prefix_separator"]= new RegExp( datas["REGEXP"]["prefix_separator"] +"$", tmp["modifiers"]);
-						tmp["match_word"]= new RegExp("(?:"+ datas["REGEXP"]["before_word"] +")("+ datas["REGEXP"]["possible_words_letters"] +")$", tmp["modifiers"]);
+						tmp["before_word"]= new RegExp(datas["REGEXP"]["before_word"]);
+						tmp["match_word"]= new RegExp("(?:"+ datas["REGEXP"]["before_word"] +"|^)("+ datas["REGEXP"]["possible_words_letters"] +")$", tmp["modifiers"]);
 						tmp["match_next_letter"]= new RegExp("^("+ datas["REGEXP"]["letter_after_word_must_match"] +")$", tmp["modifiers"]);
 						tmp["keywords"]= {};
 						//console.log( datas["KEYWORDS"] );
