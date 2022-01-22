@@ -58,6 +58,15 @@ body, html, table, form, textarea{
 	outline: none;	/* safari outline fix */
 }
 
+#content_changes{
+	white-space: pre;
+	margin: 0;
+	padding: 0;
+	position : absolute; 
+	z-index: 4; 
+	overflow: visible;
+}
+
 #content_highlight{
 	white-space: pre;
 	margin: 0;
@@ -105,6 +114,7 @@ body, html, table, form, textarea{
 	visibility:visible;
 }
 
+#container.word_wrap #content_changes,
 #container.word_wrap #content_highlight,
 #container.word_wrap #selection_field,
 #container.word_wrap #selection_field_text,
@@ -534,3 +544,18 @@ table.statusbar{
 	font-style: italic;
 	padding: 0 3px;
 }
+
+
+.hasDel { background: #FFEEF0; }
+del { background: #FDB8C0; text-decoration: none; }
+
+.hasIns { background: #E6FFED; }
+ins { background: #ACF2BD; text-decoration: none; }
+
+
+
+
+
+
+
+

@@ -45,7 +45,7 @@
 	EditArea.prototype.set_font= function(family, size){
 		var t=this, a=this.textarea, s=this.settings, elem_font, i, elem;
 		// list all elements concerned by font changes
-		var elems= ["textarea", "content_highlight", "cursor_pos", "end_bracket", "selection_field", "selection_field_text", "line_number"];
+		var elems= ["textarea", "content_changes", "content_highlight", "cursor_pos", "end_bracket", "selection_field", "selection_field_text", "line_number"];
 		
 		if(family && family!="")
 			s["font_family"]= family;
@@ -826,6 +826,7 @@
 			wrap_mode = 'soft';
 			this.container.className+= ' word_wrap';
 			this.container.style.width="";
+			this.content_changes.style.width="";
 			this.content_highlight.style.width="";
 			a.style.width="100%";
 			if( t.isIE && t.isIE < 7 )	// IE 6 count 50 px too much

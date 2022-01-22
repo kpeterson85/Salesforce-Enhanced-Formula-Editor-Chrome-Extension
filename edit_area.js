@@ -95,6 +95,7 @@
 		t.textarea			= _$("textarea");
 		t.container			= _$("container");
 		t.result			= _$("result");
+		t.content_changes	= _$("content_changes");
 		t.content_highlight	= _$("content_highlight");
 		t.selection_field	= _$("selection_field");
 		t.selection_field_text= _$("selection_field_text");
@@ -212,6 +213,7 @@
 		
 		// fix rendering bug for highlighted lines beginning with no tabs
 		if( t.isFirefox >= '3' ) {
+			t.content_changes.style.paddingLeft= "1px";
 			t.content_highlight.style.paddingLeft= "1px";
 			t.selection_field.style.paddingLeft= "1px";
 			t.selection_field_text.style.paddingLeft= "1px";
@@ -371,6 +373,7 @@
 				{	
 					this.container.style.width= area_width+"px";
 					this.textarea.style.width= area_width+"px";
+					this.content_changes.style.width= area_width+"px";
 					this.content_highlight.style.width= area_width+"px";	
 					this.textarea.previous_scrollWidth=area_width;
 					resized=true;
@@ -384,7 +387,7 @@
 					newW-=2;
 				if( this.isSafari )
 					newW-=6;
-				this.content_highlight.style.width=this.selection_field_text.style.width=this.selection_field.style.width=this.test_font_size.style.width=newW+"px";
+				this.content_changes.style.width=this.content_highlight.style.width=this.selection_field_text.style.width=this.selection_field.style.width=this.test_font_size.style.width=newW+"px";
 			}
 			
 			//2) Manage display height
@@ -399,6 +402,7 @@
 			{	
 				this.container.style.height= (area_height+2)+"px";
 				this.textarea.style.height= area_height+"px";
+				this.content_changes.style.height= area_height+"px";
 				this.content_highlight.style.height= area_height+"px";	
 				this.textarea.previous_scrollHeight= area_height;
 				resized=true;

@@ -273,6 +273,7 @@ function init() {
 								loader.src = chrome.extension.getURL("edit_area_loader.js");
 								loader.charset = "UTF-8";
 								loader.onload = loaderLoaded;
+								loader.id = "editorLoaderScript";
 								elDocument.getElementsByTagName("head")[0].appendChild(loader);		
 
 								function loaderLoaded()
