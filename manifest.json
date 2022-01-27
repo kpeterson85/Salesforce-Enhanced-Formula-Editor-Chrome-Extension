@@ -42,9 +42,9 @@
 		"FieldDetailsScreenshot.jpg",
 		"plugins/*"
 	],
-	"description": "Enhances the formula editor textareas to have syntax highlighting, tabbing, parenthesis matching, and find and replace.",
+	"description": "Enhances Salesforce formulas to provide syntax highlighting, parenthesis matching, autocomplete, formatting, and field analysis.",
 	"name": "Salesforce.com Enhanced Formula Editor",
-	"version": "2.3.1",
+	"version": "2.4",
 	"options_page": "options.html",
 	"background": {
 		"scripts": ["background.js"],
