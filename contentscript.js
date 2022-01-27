@@ -302,7 +302,9 @@ function init() {
 										activate.charset = "UTF-8";
 										elDocument.getElementsByTagName("head")[0].appendChild(activate);
 										
-										
+										//LISTEN FOR THE 'REVIEW CHANGES' BUTTON CLICK MESSAGE AND SHOW A POPUP WINDOW WITH 2 EDITORS HIGHLIGHTING THE
+										//DELETES AND ADDITIONS TO THE CODE, THIS IS HANDLED HERE IN THE CONTENT SCRIPT
+										//BECAUSE IN FLOWS/PROCESS BUILDERS A LOT OF THE BELOW WORK CAN'T BE DONE WITHOUT CAUSING CSP ERRORS
 										elWindow.addEventListener("message", function(event)
 										{
 										    if (event.data.hasOwnProperty("type") && event.data.type == "FormulaEditorReviewChanges")
@@ -314,7 +316,7 @@ function init() {
 												
 												if (sOldCode == sNewCode)
 												{
-													alert("No changes found.");
+													elWindow.alert("No changes found.");
 													return false;
 												}
 												
@@ -339,6 +341,7 @@ function init() {
 												txtOld.value = sOldCode;
 												txtNew.value = sNewCode;
 												
+												//BUILD STRING LITERALS OF CSS/JS THAT WE WILL INJECT INTO THE POPUP WINDOW
 												var sCSS = `
 												ins { background:#ACF2BD; text-decoration: none; }
 												div.hasIns { background: #E6FFED; }
@@ -350,6 +353,7 @@ function init() {
 												style.appendChild(document.createTextNode(sCSS));
 												newWin.document.body.appendChild(style);
 												
+												//THIS IS NEEDED FOR THE EDITAREA EDITOR
 												var hiddenBaseURL = document.createElement("input")
 												hiddenBaseURL.id = "ForceFormulaEditorBaseURL";
 												hiddenBaseURL.type = "hidden";
@@ -449,11 +453,13 @@ function init() {
 												script.appendChild(document.createTextNode(sJS));
 												newWin.document.body.appendChild(script);
 												
+												//LISTEN FOR THE 'REVIEW CHANGES' EDITORS TO BE FINISHED LOADED, THIS IS FIRED FROM THE 'loaderLoaded' FUNCTION
 												newWin.addEventListener("message", function(event)
 												{
 													if (event.data.hasOwnProperty("type") && event.data.type == "FormulaEditorReviewChangesLoadDiffs")
 													{
 												
+														//GOOGLE DIFF MATCH LIBRARY
 														//https://github.com/google/diff-match-patch/blob/master/LICENSE
 														var diff_match_patch=function(){this.Diff_Timeout=1;this.Diff_EditCost=4;this.Match_Threshold=.5;this.Match_Distance=1E3;this.Patch_DeleteThreshold=.5;this.Patch_Margin=4;this.Match_MaxBits=32},DIFF_DELETE=-1,DIFF_INSERT=1,DIFF_EQUAL=0;diff_match_patch.Diff=function(a,b){this[0]=a;this[1]=b};diff_match_patch.Diff.prototype.length=2;diff_match_patch.Diff.prototype.toString=function(){return this[0]+","+this[1]};
 														diff_match_patch.prototype.diff_main=function(a,b,c,d){"undefined"==typeof d&&(d=0>=this.Diff_Timeout?Number.MAX_VALUE:(new Date).getTime()+1E3*this.Diff_Timeout);if(null==a||null==b)throw Error("Null input. (diff_main)");if(a==b)return a?[new diff_match_patch.Diff(DIFF_EQUAL,a)]:[];"undefined"==typeof c&&(c=!0);var e=c,f=this.diff_commonPrefix(a,b);c=a.substring(0,f);a=a.substring(f);b=b.substring(f);f=this.diff_commonSuffix(a,b);var g=a.substring(a.length-f);a=a.substring(0,a.length-f);b=b.substring(0,
@@ -510,7 +516,8 @@ function init() {
 														diff_match_patch.patch_obj=function(){this.diffs=[];this.start2=this.start1=null;this.length2=this.length1=0};
 														diff_match_patch.patch_obj.prototype.toString=function(){for(var a=["@@ -"+(0===this.length1?this.start1+",0":1==this.length1?this.start1+1:this.start1+1+","+this.length1)+" +"+(0===this.length2?this.start2+",0":1==this.length2?this.start2+1:this.start2+1+","+this.length2)+" @@\n"],b,c=0;c<this.diffs.length;c++){switch(this.diffs[c][0]){case DIFF_INSERT:b="+";break;case DIFF_DELETE:b="-";break;case DIFF_EQUAL:b=" "}a[c+1]=b+encodeURI(this.diffs[c][1])+"\n"}return a.join("").replace(/%20/g," ")};
 														this.diff_match_patch=diff_match_patch;this.DIFF_DELETE=DIFF_DELETE;this.DIFF_INSERT=DIFF_INSERT;this.DIFF_EQUAL=DIFF_EQUAL;
-
+														
+														//CONVERT THE GOOGLE DIFF MATCH RESULTS TO HTML WITH DIVS FOR EACH LINE SO WE CAN HIGHLIGHT LINES THAT HAVE CHANGES
 														function GetHTML(diffs, ops)
 														{
 														  var html = [];
@@ -559,10 +566,15 @@ function init() {
 														
 														var sOldCodeDiffHTML = GetHTML(diff, [DIFF_DELETE, DIFF_EQUAL]);
 														newWin.document.getElementById("old").nextSibling.contentWindow.document.getElementById("content_changes").innerHTML = sOldCodeDiffHTML;
-
+														//hide the background color that shows for the current line they've clicked on since it makes it confusing next to the green/red background colors
+														newWin.document.getElementById("old").nextSibling.contentWindow.document.getElementById("selection_field").style.display = "none";
+														
 														var sNewCodeDiffHTML = GetHTML(diff, [DIFF_INSERT, DIFF_EQUAL]);
 														newWin.document.getElementById("new").nextSibling.contentWindow.document.getElementById("content_changes").innerHTML = sNewCodeDiffHTML;
+														//hide the background color that shows for the current line they've clicked on since it makes it confusing next to the green/red background colors
+														newWin.document.getElementById("new").nextSibling.contentWindow.document.getElementById("selection_field").style.display = "none";
 														
+														//IDENTIFY LINES THAT HAD CHANGES AND ADD A CLASS TO THE PARENT DIV THAT REPRESENTS THE LINE
 														var dels = newWin.document.getElementById("old").nextSibling.contentWindow.document.getElementById("content_changes").querySelectorAll("del");
 														for (var i = 0; i < dels.length; i++)
 														{

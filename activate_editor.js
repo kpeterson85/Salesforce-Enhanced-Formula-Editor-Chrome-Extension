@@ -371,7 +371,7 @@ function FormulaEditAreaLoaded(sTextAreaId)
 		//send a postmessage to the current window (the popup window) so that the contentscript postmessage handler can receive the updated formula and set it on the field
 		window.postMessage({type: "FormulaEditorPopupSave", value: editAreaLoader.getValue(sTextAreaId) }, "*")
 	  });
-	  editorJQuery("#" + sTextAreaId).next("iframe").contents().find("#toolbar_1").prepend($saveButton);
+	  editorJQuery("#" + sTextAreaId).next("iframe").contents().find("#toolbar_1").append($saveButton);
   }  
   
   //DON'T PROVIDE THE FORMAT BUTTON FOR POPUP EDITORS (PROCESS BUILDER, FLOWS) UNTIL WE HAVE TESTED IT MORE
@@ -384,7 +384,7 @@ function FormulaEditAreaLoaded(sTextAreaId)
 	  {
 		formatFormula(sTextAreaId);
 	  });
-	  editorJQuery("#" + sTextAreaId).next("iframe").contents().find("#toolbar_1").prepend($formatButton);
+	  editorJQuery("#" + sTextAreaId).next("iframe").contents().find("#toolbar_1").append($formatButton);
   }
   
 
@@ -400,7 +400,7 @@ function FormulaEditAreaLoaded(sTextAreaId)
 	//and can create the editor scripts in the popup without being blocked by CSP rules in flow/processbuilder pages
 	window.postMessage({type: "FormulaEditorReviewChanges", textAreaId: sTextAreaId, oldCode: sOldCode, newCode: sNewCode }, "*")
   });
-  editorJQuery("#" + sTextAreaId).next("iframe").contents().find("#toolbar_1").prepend($changesButton);
+  editorJQuery("#" + sTextAreaId).next("iframe").contents().find("#toolbar_1").append($changesButton);
 
   
   //SETUP AUTO COMPLETION
