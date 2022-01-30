@@ -382,20 +382,24 @@ function FormulaEditAreaLoaded(sTextAreaId)
   }
   
 
-  //SETUP THE REVIEW CHANGES BUTTON
-  //FIND THE EDITOR AND INJECT THE FORMAT BUTTON, THE EDITOR IFRAME IS ALWAYS RIGHT AFTER THE TEXT AREA
-  var $changesButton = editorJQuery("<input type='button' value='Review Changes' class='btnReviewChanges' style='float: left; margin: 1px 0 0 2px; padding: 0 2px;' />");
-  $changesButton.click(function()
+  //ONLY PROVIDE THE REVIEW CHANGES BUTTON IF IT IS THE MAIN EDITOR ON THE PAGE (NOT SUB FORMULA EDITORS) SINCE
+  //USERS WON'T BE EDITING AND SAVING SUB FORMULAS
+  if (oFormulaEditorSettings.OverrideInsertButtons == true)
   {
-	var sOldCode = oFormulaEditorSettings.OriginalFormulaCode;
-	var sNewCode = editAreaLoader.getValue(sTextAreaId);
-	
-	//send a postmessage so that the contentscript can receive it and open the popup window, the contentscript has elevated permissions
-	//and can create the editor scripts in the popup without being blocked by CSP rules in flow/processbuilder pages
-	window.postMessage({type: "FormulaEditorReviewChanges", textAreaId: sTextAreaId, oldCode: sOldCode, newCode: sNewCode }, "*")
-  });
-  editorJQuery("#" + sTextAreaId).next("iframe").contents().find("#toolbar_1").append($changesButton);
-
+	  //SETUP THE REVIEW CHANGES BUTTON
+	  //FIND THE EDITOR AND INJECT THE FORMAT BUTTON, THE EDITOR IFRAME IS ALWAYS RIGHT AFTER THE TEXT AREA
+	  var $changesButton = editorJQuery("<input type='button' value='Review Changes' class='btnReviewChanges' style='float: left; margin: 1px 0 0 2px; padding: 0 2px;' />");
+	  $changesButton.click(function()
+	  {
+		var sOldCode = oFormulaEditorSettings.OriginalFormulaCode;
+		var sNewCode = editAreaLoader.getValue(sTextAreaId);
+		
+		//send a postmessage so that the contentscript can receive it and open the popup window, the contentscript has elevated permissions
+		//and can create the editor scripts in the popup without being blocked by CSP rules in flow/processbuilder pages
+		window.postMessage({type: "FormulaEditorReviewChanges", textAreaId: sTextAreaId, oldCode: sOldCode, newCode: sNewCode }, "*")
+	  });
+	  editorJQuery("#" + sTextAreaId).next("iframe").contents().find("#toolbar_1").append($changesButton);
+  }
   
   //SETUP AUTO COMPLETION
   if (typeof(fieldTreeController) != "undefined")
