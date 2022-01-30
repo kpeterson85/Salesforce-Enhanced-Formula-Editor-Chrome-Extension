@@ -57,7 +57,7 @@ function ActivateWhenTextFieldsVisible(eTextfield)
 				TextAreaEditorFontSizeChangedCallback: "FormulaEditAreaFontSizeChanged",
 				TextAreaEditorFontFamilyChangedCallback: "FormulaEditAreaFontFamilyChanged",
 				OverrideInsertButtons: true,
-				LoadFieldDetailsAfterSelector: ".formulaFooter",
+				LoadFieldDetailsAfterSelector: "#frame_" + entries[0].target.getAttribute("id"),
 				ParentElement: parent,
 				OriginalFormulaCode: entries[0].target.value
 			}
@@ -153,7 +153,8 @@ function ActivateEditor(oFormulaEditorSettings)
 		FieldsShell: null,
 		FieldsTable: null,
 		FieldValuesPreviewInput: null,
-		ParentElement: document
+		ParentElement: document,
+		OriginalFormulaCode: ""
 	}
 	
 	oFormulaEditorSettings = editorJQuery.extend(oDefaultSettings, oFormulaEditorSettings);
@@ -203,7 +204,7 @@ function ActivateEditor(oFormulaEditorSettings)
 			,fullscreen: oFormulaEditorSettings.Popup
 			,plugins: "autocompletion"
 			,autocompletion: true
-			,toolbar: "search,go_to_line,fullscreen,word_wrap,|,undo,redo,|,select_fontfamily,select_fontsize"
+			,toolbar: "search,fullscreen,word_wrap,|,undo,redo,|,select_fontfamily,select_fontsize"
 		});
 	}
 }
@@ -211,7 +212,7 @@ function ActivateEditor(oFormulaEditorSettings)
 
 function FormulaEditAreaLoaded(sTextAreaId)
 {
-	oFormulaEditorSettings = editorJQuery(editAreas[sTextAreaId].textarea).data("formulaEditorSettings");
+	var oFormulaEditorSettings = editorJQuery(editAreas[sTextAreaId].textarea).data("formulaEditorSettings");
 	
 	//execute this manually because chrome doesn't recognize off on intial load?
 	//the textarea[wrap=off] useragent styles don't apply initially for some reason
@@ -250,9 +251,11 @@ function FormulaEditAreaLoaded(sTextAreaId)
 	{
 		//ShowNewVersionMessage();
 		
-		var $fieldDetails = editorJQuery("<span class='formulaEditorFieldsLoadShell' style='float: left;'><input type='submit' class='btn formulaEditorFieldsLoad' value='Load Field Details' /><span class='formulaEditorTooltip' title='Loads details about the fields found in the formula.'>?</span></span><div class='formulaEditorFields' style='display: none;'><div class='fieldValuesPreviewShell' style='display: inline; text-align: right; float: right;'><input type='text' class='fieldValuesPreviewId' placeholder='Enter Record Id' /> <input type='button' class='fieldValuesPreviewButton btn' value='Load Record Values' /></div><div class='formulaEditorError' style='display: none; clear: both; background: #f8d7da; padding: 5px; border: 1px solid #ff808d; border-radius: 5px;'></div><div class='formulaEditorWarning' style='display: none; clear: both; color: #856404; background-color: #fff3cd; padding: 5px; border: 1px solid #ffe699; border-radius: 5px;'></div><table class='formulaEditorFieldsTable list'></table></div>");
+		var $loadButton = editorJQuery("<input type='button' value='Load Field Details' class='btnLoadFieldDetails' style='float: left; margin: 1px 0 0 2px; padding: 0 2px;' />");
+		editorJQuery("#" + sTextAreaId).next("iframe").contents().find("#toolbar_1").append($loadButton);
+		
+		var $fieldDetails = editorJQuery("<div class='formulaEditorFields' style='display: none;'><div class='formulaEditorError' style='display: none; clear: both; background: #f8d7da; padding: 5px; border: 1px solid #ff808d; border-radius: 5px;'></div><div class='formulaEditorWarning' style='display: none; clear: both; color: #856404; background-color: #fff3cd; padding: 5px; border: 1px solid #ffe699; border-radius: 5px;'></div><table class='formulaEditorFieldsTable list'></table><div class='fieldValuesPreviewShell' style='display: inline; text-align: right; float: right;'><input type='text' class='fieldValuesPreviewId' placeholder='Enter Record Id' /> <input type='button' class='fieldValuesPreviewButton btn' value='Load Record Values' /></div></div>");
 					
-		$loadButton = $fieldDetails.find("input.formulaEditorFieldsLoad");
 		$loadButton.data("formulaEditorSettings", oFormulaEditorSettings);
 		
 		$fieldsShell = $fieldDetails.filter("div.formulaEditorFields");
@@ -266,15 +269,6 @@ function FormulaEditAreaLoaded(sTextAreaId)
 		
 		$fieldsTable = $fieldDetails.find("table.formulaEditorFieldsTable");
 		oFormulaEditorSettings.FieldsTable = $fieldsTable;
-		
-		if (oFormulaEditorSettings.OverrideInsertButtons == true)
-		{
-			$fieldDetails.find(".formulaEditorTooltip").css(oEditorTooltipStyles);
-		}
-		else
-		{
-			$fieldDetails.find(".formulaEditorTooltip").remove();
-		}
 		
 		editorJQuery(oFormulaEditorSettings.LoadFieldDetailsAfterSelector).after($fieldDetails);
 		
@@ -762,6 +756,8 @@ function LoadFormulaFieldDetails(e)
 	
 	oFormulaEditorSettings.FieldsShell.show();
 	
+	editorJQuery("html, body").animate({ scrollTop: $table.offset().top - 75 }, 500);
+	
 	e.preventDefault();
 	e.stopImmediatePropagation();
 
@@ -862,7 +858,8 @@ function UpdateFieldDetails($fieldTR, sObjectLookupFieldName, sObjectName, iFiel
 			ObjectId: "",
 			ObjectAPIName: sObjectName,
 			OverrideInsertButtons: false,
-			LoadFieldDetailsAfterSelector: "#" + sTextAreaId+"Footer"
+			LoadFieldDetailsAfterSelector: "#frame_" + sTextAreaId,
+			OriginalFormulaCode: oFieldDescribe.calculatedFormula
 		}
 		
 		ActivateEditor(oSubFormulaEditorSettings);	
