@@ -44,7 +44,7 @@
 	],
 	"description": "Enhances Salesforce formulas to provide syntax highlighting, parenthesis matching, autocomplete, formatting, and field analysis.",
 	"name": "Salesforce.com Enhanced Formula Editor",
-	"version": "2.4",
+	"version": "2.4.1",
 	"options_page": "options.html",
 	"background": {
 		"scripts": ["background.js"],
