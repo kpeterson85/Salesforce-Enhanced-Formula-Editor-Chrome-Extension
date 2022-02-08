@@ -74,7 +74,12 @@ function ActivateWhenTextFieldsVisible(eTextfield)
 			{
 				oFormulaEditorSettings.Popup = true;
 			}
-
+			else
+			{
+				//IF NOT IN A POPUP LIKE FLOW/PROCESSBUILDER THEN DO LIVE VALIDATING
+				oFormulaEditorSettings.TextAreaEditorChangeCallback = "FormulaEditAreaChanged"
+			}
+			
 			//custom objects have their object id in the entity field, standard objects have their object name
 			var $objectIdField = editorJQuery("#" + sObjectElementId);
 			if ($objectIdField.length == 1)
@@ -154,7 +159,8 @@ function ActivateEditor(oFormulaEditorSettings)
 		FieldsTable: null,
 		FieldValuesPreviewInput: null,
 		ParentElement: document,
-		OriginalFormulaCode: ""
+		OriginalFormulaCode: "",
+		TextAreaEditorChangeCallback: ""
 	}
 	
 	oFormulaEditorSettings = editorJQuery.extend(oDefaultSettings, oFormulaEditorSettings);
@@ -205,6 +211,7 @@ function ActivateEditor(oFormulaEditorSettings)
 			,plugins: "autocompletion"
 			,autocompletion: true
 			,toolbar: "search,fullscreen,word_wrap,|,undo,redo,|,select_fontfamily,select_fontsize"
+			,EA_change_callback: oFormulaEditorSettings.TextAreaEditorChangeCallback
 		});
 	}
 }
@@ -246,6 +253,9 @@ function FormulaEditAreaLoaded(sTextAreaId)
 		}
 	}
 	
+	var $fieldDetails = editorJQuery("<br><div class='formulaEditorValidation' style='display: none; padding: 4px 8px; margin: 2px 0;'></div><div class='formulaEditorFields' style='display: none;'><div class='formulaEditorError' style='display: none; clear: both; background: #f8d7da; padding: 5px; border: 1px solid #ff808d; border-radius: 5px;'></div><div class='formulaEditorWarning' style='display: none; clear: both; color: #856404; background-color: #fff3cd; padding: 5px; border: 1px solid #ffe699; border-radius: 5px;'></div><table class='formulaEditorFieldsTable list'></table><div class='fieldValuesPreviewShell' style='display: inline; text-align: right; float: right;'><input type='text' class='fieldValuesPreviewId' placeholder='Enter Record Id' /> <input type='button' class='fieldValuesPreviewButton btn' value='Load Record Values' /></div></div>");
+	editorJQuery(oFormulaEditorSettings.LoadFieldDetailsAfterSelector).after($fieldDetails);
+	
 	//SETUP FIELD DETAILS IF WE CAN IDENTIFY WHAT OBJECT WE ARE WORKING WITH
 	if (oFormulaEditorSettings.ObjectId != "" || oFormulaEditorSettings.ObjectAPIName != "")
 	{
@@ -254,8 +264,7 @@ function FormulaEditAreaLoaded(sTextAreaId)
 		var $loadButton = editorJQuery("<input type='button' value='Load Field Details' class='btnLoadFieldDetails' style='float: left; margin: 1px 0 0 2px; padding: 0 2px;' />");
 		editorJQuery("#" + sTextAreaId).next("iframe").contents().find("#toolbar_1").append($loadButton);
 		
-		var $fieldDetails = editorJQuery("<div class='formulaEditorFields' style='display: none;'><div class='formulaEditorError' style='display: none; clear: both; background: #f8d7da; padding: 5px; border: 1px solid #ff808d; border-radius: 5px;'></div><div class='formulaEditorWarning' style='display: none; clear: both; color: #856404; background-color: #fff3cd; padding: 5px; border: 1px solid #ffe699; border-radius: 5px;'></div><table class='formulaEditorFieldsTable list'></table><div class='fieldValuesPreviewShell' style='display: inline; text-align: right; float: right;'><input type='text' class='fieldValuesPreviewId' placeholder='Enter Record Id' /> <input type='button' class='fieldValuesPreviewButton btn' value='Load Record Values' /></div></div>");
-					
+		
 		$loadButton.data("formulaEditorSettings", oFormulaEditorSettings);
 		
 		$fieldsShell = $fieldDetails.filter("div.formulaEditorFields");
@@ -268,9 +277,7 @@ function FormulaEditAreaLoaded(sTextAreaId)
 		oFormulaEditorSettings.FieldValuesPreviewInput = $previewInput;
 		
 		$fieldsTable = $fieldDetails.find("table.formulaEditorFieldsTable");
-		oFormulaEditorSettings.FieldsTable = $fieldsTable;
-		
-		editorJQuery(oFormulaEditorSettings.LoadFieldDetailsAfterSelector).after($fieldDetails);
+		oFormulaEditorSettings.FieldsTable = $fieldsTable;		
 		
 		$loadButton.click(LoadFormulaFieldDetails);
 		
@@ -504,6 +511,81 @@ function LoadAutoCompleteNode(sChildrenPrefix, oNode, oEntriesLoaded)
 			
 		}
 	}
+}
+
+function FormulaEditAreaChanged(sTextAreaId)
+{
+	if (typeof(window.FormulaEditorChangeTimeout) != "undefined")
+	{
+		clearTimeout(window.FormulaEditorChangeTimeout);
+	}	
+	
+	window.FormulaEditorChangeTimeout = setTimeout(function()
+	{
+		//editorJQuery(".formulaEditorValidation").css("background", "#ececec").css("border", "1px solid #d8d8d8").html("Validating");
+		
+		editorJQuery("#"+sTextAreaId).val(editAreaLoader.getValue(sTextAreaId)); //set the native form textarea value so when we post the form it is validating the updated formula
+		
+		var sEditURL = document.location.href;
+		var $form = editorJQuery("#editPage").clone();
+		//remove the save buttons so only the Check Syntax button is present to just do validation
+		//check to see which Check Syntax button is present on the page (certain pages like account fields, validation rules, etc. use different button names)
+		var sFormPostData = "";
+		if ($form.find("input[type='submit'][name='validateDefaultFormula']").length > 0) //account field
+		{
+			$form.find("input[type='submit'][name!='validateDefaultFormula']").remove(); 
+			sFormPostData = $form.serialize();
+			if (sFormPostData.indexOf("validateDefaultFormula") == -1)
+			{
+				sFormPostData += "&validateDefaultFormula=Check Syntax";
+			}
+		}
+		if ($form.find("input[type='submit'][name='validateFormula']").length > 0) //validation rule
+		{
+			$form.find("input[type='submit'][name!='validateFormula']").remove();
+			sFormPostData = $form.serialize();
+			if (sFormPostData.indexOf("validateFormula") == -1)
+			{
+				sFormPostData += "&validateFormula=Check Syntax";
+			}
+		}
+		editorJQuery.post(sEditURL, sFormPostData, function(data)
+		{
+			var $eValidation = editorJQuery(data).find("#validationStatus, .validationSuccess");
+			//CHANGE THE STYLE BASED ON ERROR OR NOT
+			if ($eValidation.length > 0)
+			{
+				if ($eValidation.find(".errorStyle").length > 0) //IS ERROR
+				{
+					editorJQuery(".formulaEditorValidation").css("background", "#f8d7da").css("border", "1px solid #ff808d");
+				}
+				else
+				{
+					editorJQuery(".formulaEditorValidation").css("background", "#d4edda").css("border", "1px solid #c3e6cb");
+				}
+			}
+			else
+			{
+				//workflow rule formulas show errors in this other element (successes use the above elements like normal
+				var $eValidation = editorJQuery(data).find(".errorMsg");
+				if ($eValidation.length > 0)
+				{
+					editorJQuery(".formulaEditorValidation").css("background", "#f8d7da").css("border", "1px solid #ff808d");
+				}				
+			}
+			
+			if ($eValidation.length > 0)
+			{
+				editorJQuery(".formulaEditorValidation").html($eValidation.text()).css("display", "inline-block");
+			}
+			else
+			{
+				editorJQuery(".formulaEditorValidation").hide();
+			}
+			
+		});
+		
+	}, 1000);
 }
 
 function FormulaEditAreaResized(sTextAreaId)

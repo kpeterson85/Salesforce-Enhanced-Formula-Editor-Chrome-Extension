@@ -109,6 +109,8 @@ function keyDown(e){
 	}
 	//alert("Test: "+ letter + " ("+e.keyCode+") ALT: "+ AltPressed(e) + " CTRL "+ CtrlPressed(e) + " SHIFT "+ ShiftPressed(e));
 	
+	editArea.execCommand("EA_changed", editArea.id);
+	
 	return true;
 	
 };

@@ -74,6 +74,7 @@ function EditAreaLoader(){
 		,EA_file_switch_on_callback: ""	// a new tab is selected (called for the newly selected file)
 		,EA_file_switch_off_callback: ""	// a new tab is selected (called for the previously selected file)
 		,EA_file_close_callback: ""		// close a tab
+		,EA_change_callback: ""
 	};
 	
 	t.advanced_buttons = [
