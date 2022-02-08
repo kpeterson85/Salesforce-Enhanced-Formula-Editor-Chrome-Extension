@@ -360,99 +360,6 @@ function init() {
 												hiddenBaseURL.value = elDocument.getElementById("ForceFormulaEditorBaseURL").value; //get the value from the existing hidden that the contentscript added to the current page, we will create a duplicate in the popup
 												newWin.document.body.appendChild(hiddenBaseURL);
 												
-												var sJS = `
-												function loaderLoaded()
-												{		
-													editAreaLoader.init({
-														id: "old"	// id of the textarea to transform		
-														,start_highlight: true	// if start with highlight
-														,allow_resize: "both"
-														,allow_toggle: true
-														,word_wrap: false
-														,language: "en"
-														,syntax: "forceformula"
-														,replace_tab_by_spaces: 2
-														//,font_size: sFontSize
-														//,font_family: sFontFamily
-														//,min_height: oFormulaEditorSettings.TextAreaEditorMinHeight
-														//,min_width: oFormulaEditorSettings.TextAreaEditorMinWidth		
-														,show_line_colors: true
-														//,EA_load_callback: "FormulaEditAreaLoaded"
-														//,EA_resized_callback: oFormulaEditorSettings.TextAreaEditorResizedCallback
-														,EA_font_size_changed_callback: ""
-														,EA_font_family_changed_callback: ""
-														//,display: oFormulaEditorSettings.TextAreaEditorDisplay
-														,is_editable: false
-														//,parent: oFormulaEditorSettings.ParentElement
-														//,fullscreen: oFormulaEditorSettings.Popup
-														//,plugins: "autocompletion"
-														//,autocompletion: true
-														//,toolbar: "search,go_to_line,fullscreen,word_wrap,|,undo,redo,|,select_fontfamily,select_fontsize"
-														,allow_toggle: false //don't show the toggle checkbox in this view since it takes up space and messes up the editors showing side by side
-													});
-													
-													editAreaLoader.init({
-														id: "new"	// id of the textarea to transform		
-														,start_highlight: true	// if start with highlight
-														,allow_resize: "both"
-														,allow_toggle: true
-														,word_wrap: false
-														,language: "en"
-														,syntax: "forceformula"
-														,replace_tab_by_spaces: 2
-														//,font_size: sFontSize
-														//,font_family: sFontFamily
-														//,min_height: oFormulaEditorSettings.TextAreaEditorMinHeight
-														//,min_width: oFormulaEditorSettings.TextAreaEditorMinWidth		
-														,show_line_colors: true
-														,EA_load_callback: "DiffEditAreasLoaded"
-														//,EA_resized_callback: oFormulaEditorSettings.TextAreaEditorResizedCallback
-														,EA_font_size_changed_callback: ""
-														,EA_font_family_changed_callback: ""
-														//,display: oFormulaEditorSettings.TextAreaEditorDisplay
-														,is_editable: false
-														//,parent: oFormulaEditorSettings.ParentElement
-														//,fullscreen: oFormulaEditorSettings.Popup
-														//,plugins: "autocompletion"
-														//,autocompletion: true
-														//,toolbar: "search,go_to_line,fullscreen,word_wrap,|,undo,redo,|,select_fontfamily,select_fontsize"
-														,allow_toggle: false //don't show the toggle checkbox in this view since it takes up space and messes up the editors showing side by side
-													});
-													
-													window.DiffEditAreasLoaded = function()
-													{		
-														//send a postmessage so that the contentscript can receive it and load the diff content, the contentscript has elevated permissions
-														//and can do more in the popup without being blocked by CSP rules in flow/processbuilder pages
-														window.postMessage({type: "FormulaEditorReviewChangesLoadDiffs" }, "*")
-														
-														
-													}
-												}
-												`;
-												var script = document.createElement('script');
-												script.type = 'text/javascript';	
-												script.appendChild(document.createTextNode(sJS));
-												newWin.document.body.appendChild(script);
-												
-												var sLoaderPath = elDocument.getElementById("editorLoaderScript").getAttribute("src"); //get the value from the existing script that the contentscript added to the current page, we will create a duplicate in the popup
-												var sJS = `
-												var loader = document.createElement("script");
-												loader.type = "text/javascript";
-												loader.src = "${sLoaderPath}";
-												loader.charset = "UTF-8";
-												loader.onload = loaderLoaded;
-												document.body.appendChild(loader);	
-												
-												//cause window load to fire so the editarea loader script knows the window is ready since we are adding it to a popup where window loaded already fire
-												setTimeout(function(){
-													dispatchEvent(new Event('load'));
-												}, 100);
-												`;
-												var script = document.createElement('script');
-												script.type = 'text/javascript';
-												script.appendChild(document.createTextNode(sJS));
-												newWin.document.body.appendChild(script);
-												
 												//LISTEN FOR THE 'REVIEW CHANGES' EDITORS TO BE FINISHED LOADED, THIS IS FIRED FROM THE 'loaderLoaded' FUNCTION
 												newWin.addEventListener("message", function(event)
 												{
@@ -588,6 +495,101 @@ function init() {
 														}
 													}
 												});//end LoadDiffs message handler
+												
+												var sJS = `
+												function loaderLoaded()
+												{		
+													editAreaLoader.init({
+														id: "old"	// id of the textarea to transform		
+														,start_highlight: true	// if start with highlight
+														,allow_resize: "both"
+														,allow_toggle: true
+														,word_wrap: false
+														,language: "en"
+														,syntax: "forceformula"
+														,replace_tab_by_spaces: 2
+														//,font_size: sFontSize
+														//,font_family: sFontFamily
+														//,min_height: oFormulaEditorSettings.TextAreaEditorMinHeight
+														//,min_width: oFormulaEditorSettings.TextAreaEditorMinWidth		
+														,show_line_colors: true
+														//,EA_load_callback: "FormulaEditAreaLoaded"
+														//,EA_resized_callback: oFormulaEditorSettings.TextAreaEditorResizedCallback
+														,EA_font_size_changed_callback: ""
+														,EA_font_family_changed_callback: ""
+														//,display: oFormulaEditorSettings.TextAreaEditorDisplay
+														,is_editable: false
+														//,parent: oFormulaEditorSettings.ParentElement
+														//,fullscreen: oFormulaEditorSettings.Popup
+														//,plugins: "autocompletion"
+														//,autocompletion: true
+														//,toolbar: "search,go_to_line,fullscreen,word_wrap,|,undo,redo,|,select_fontfamily,select_fontsize"
+														,allow_toggle: false //don't show the toggle checkbox in this view since it takes up space and messes up the editors showing side by side
+													});
+													
+													editAreaLoader.init({
+														id: "new"	// id of the textarea to transform		
+														,start_highlight: true	// if start with highlight
+														,allow_resize: "both"
+														,allow_toggle: true
+														,word_wrap: false
+														,language: "en"
+														,syntax: "forceformula"
+														,replace_tab_by_spaces: 2
+														//,font_size: sFontSize
+														//,font_family: sFontFamily
+														//,min_height: oFormulaEditorSettings.TextAreaEditorMinHeight
+														//,min_width: oFormulaEditorSettings.TextAreaEditorMinWidth		
+														,show_line_colors: true
+														,EA_load_callback: "DiffEditAreasLoaded"
+														//,EA_resized_callback: oFormulaEditorSettings.TextAreaEditorResizedCallback
+														,EA_font_size_changed_callback: ""
+														,EA_font_family_changed_callback: ""
+														//,display: oFormulaEditorSettings.TextAreaEditorDisplay
+														,is_editable: false
+														//,parent: oFormulaEditorSettings.ParentElement
+														//,fullscreen: oFormulaEditorSettings.Popup
+														//,plugins: "autocompletion"
+														//,autocompletion: true
+														//,toolbar: "search,go_to_line,fullscreen,word_wrap,|,undo,redo,|,select_fontfamily,select_fontsize"
+														,allow_toggle: false //don't show the toggle checkbox in this view since it takes up space and messes up the editors showing side by side
+													});
+													
+													window.DiffEditAreasLoaded = function()
+													{		
+														//send a postmessage so that the contentscript can receive it and load the diff content, the contentscript has elevated permissions
+														//and can do more in the popup without being blocked by CSP rules in flow/processbuilder pages
+														window.postMessage({type: "FormulaEditorReviewChangesLoadDiffs" }, "*")
+														
+														
+													}
+												}
+												`;
+												var script = document.createElement('script');
+												script.type = 'text/javascript';	
+												script.appendChild(document.createTextNode(sJS));
+												newWin.document.body.appendChild(script);
+												
+												var sLoaderPath = elDocument.getElementById("editorLoaderScript").getAttribute("src"); //get the value from the existing script that the contentscript added to the current page, we will create a duplicate in the popup
+												var sJS = `
+												var loader = document.createElement("script");
+												loader.type = "text/javascript";
+												loader.src = "${sLoaderPath}";
+												loader.charset = "UTF-8";
+												loader.onload = loaderLoaded;
+												document.body.appendChild(loader);	
+												
+												//cause window load to fire so the editarea loader script knows the window is ready since we are adding it to a popup where window loaded already fire
+												setTimeout(function(){
+													dispatchEvent(new Event('load'));
+												}, 100);
+												`;
+												var script = document.createElement('script');
+												script.type = 'text/javascript';
+												script.appendChild(document.createTextNode(sJS));
+												newWin.document.body.appendChild(script);
+												
+												
 
 										    }										  
 										});//end Review Changes post message handler
