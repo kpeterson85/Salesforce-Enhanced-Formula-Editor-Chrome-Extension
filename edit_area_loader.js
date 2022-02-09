@@ -958,6 +958,10 @@ EditAreaLoader.prototype ={
     		this.setSelectionRange(id, new_sel["end"], new_sel["end"]);
     	else // cursor in the middle
     		this.setSelectionRange(id, old_sel["start"]+open_tag.length, old_sel["start"]+open_tag.length);
+		
+		var fs=window.frames;
+		fs["frame_"+ id].editArea.execCommand("EA_changed", id);
+		
     },
     
     // hide both EditArea and normal textarea

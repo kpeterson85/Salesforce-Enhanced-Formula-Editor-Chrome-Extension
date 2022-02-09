@@ -289,6 +289,8 @@ var EditArea_autocompletion= {
 			new_pos	= range["end"];	
 		parent.editAreaLoader.setSelectionRange(editArea.id, new_pos, new_pos);
 		this._hide();
+		
+		editArea.execCommand("EA_changed", editArea.id);
 	}
 	
 	
