@@ -42,7 +42,7 @@
 		"FieldDetailsScreenshot.jpg",
 		"plugins/*"
 	],
-	"description": "Enhances Salesforce formulas to provide syntax highlighting, parenthesis matching, autocomplete, formatting, field analysis, and auto syntax checking.",
+	"description": "Enhances Salesforce formulas with syntax highlighting, autocomplete, formatting, field analysis, and syntax checking.",
 	"name": "Salesforce.com Enhanced Formula Editor",
 	"version": "2.5",
 	"options_page": "options.html",
