@@ -261,7 +261,7 @@ function FormulaEditAreaLoaded(sTextAreaId)
 	{
 		//ShowNewVersionMessage();
 		
-		var $loadButton = editorJQuery("<input type='button' value='Load Field Details' class='btnLoadFieldDetails' style='float: left; margin: 1px 0 0 2px; padding: 0 2px;' />");
+		var $loadButton = editorJQuery("<input type='button' value='Analyze Fields' class='btnLoadFieldDetails' style='float: left; margin: 1px 0 0 2px; padding: 0 2px;' />");
 		editorJQuery("#" + sTextAreaId).next("iframe").contents().find("#toolbar_1").append($loadButton);
 		
 		
