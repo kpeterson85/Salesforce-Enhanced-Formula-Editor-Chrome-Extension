@@ -235,7 +235,9 @@
 		}
 		
 		// si le textarea n'est pas grand, un click sous le textarea doit provoquer un focus sur le textarea
-		parent.editAreaLoader.add_event(t.result, "click", function(e){ if((e.target || e.srcElement)==editArea.result) { editArea.area_select(editArea.textarea.value.length, 0);}  });
+		// if the textarea is not large, a click under the textarea must cause a focus on the textarea
+		//commented out the below because when clicking on an autocomplete option with the mouse the editor jumped the cursor to the very bottom of the editor, losing the position of where the person was coding
+		//parent.editAreaLoader.add_event(t.result, "click", function(e){ if((e.target || e.srcElement)==editArea.result) { editArea.area_select(editArea.textarea.value.length, 0);}  });
 		
 		if(s['is_multi_files']!=false)
 			t.open_file({'id': t.curr_file, 'text': ''});
