@@ -71,6 +71,17 @@ function init() {
 								componentRoot.querySelector("label").appendChild(btnOpen);
 								
 								btnOpen.editorField = elements[e];
+								
+								/*
+								var insertButton = componentRoot.querySelector(".divParentResourcePickerModeOptions input"); //either finds it or is null
+								btnOpen.insertButton = insertButton;
+								if (insertButton != null)
+								{
+									var sInsertListId = insertButton.getAttribute("aria-controls");
+									var insertList = componentRoot.querySelector("#"+sInsertListId);
+									btnOpen.insertList = insertList;
+								}
+								*/
 
 								btnOpen.addEventListener("click", function()
 								{
@@ -96,21 +107,98 @@ function init() {
 										
 										newWin.editorField = btn.editorField;
 										newWin.btn = btn;
+										/*
+										newWin.insertButton = btn.insertButton;
+										newWin.insertList = btn.insertList;
+										*/
 										
 										//in the formula popup we could not reference window.opener for security reasons so we went with window postmessages
 										newWin.addEventListener("message", function(event)
 										{
-										  if (event.data.hasOwnProperty("type") && event.data.type == "FormulaEditorPopupSave")
-										  {
-											  //receive the postmessage from the popup window (sent from activate_editor) which contains the updated formula
-											  newWin.editorField.value = event.data.value;
+											if (event.data.hasOwnProperty("type") && event.data.type == "FormulaEditorPopupSave")
+											{
+												//receive the postmessage from the popup window (sent from activate_editor) which contains the updated formula
+												newWin.editorField.value = event.data.value;
 											  
-											  //TRIGGER THE NATIVE CHANGE EVENT ON THE FIELD SO OTHER SALESFORCE FEATURES PICK UP ON THE CHANGE AND THE NEW CONTENT GETS SAVED
-											  newWin.editorField.dispatchEvent(new Event('change'));
+												//TRIGGER THE NATIVE CHANGE EVENT ON THE FIELD SO OTHER SALESFORCE FEATURES PICK UP ON THE CHANGE AND THE NEW CONTENT GETS SAVED
+												newWin.editorField.dispatchEvent(new Event('change'));
 											  
-											  newWin.close();
-										  }										  
+												newWin.close();
+											}
+											/*
+											else if (event.data.hasOwnProperty("type") && event.data.type == "FormulaEditorPopupFlowInsertResource")
+											{
+												if (newWin.insertButton != null)
+												{
+													newWin.insertButton.click();
+												  
+													//do set timeout to give the UI time to load the options
+													setTimeout(function()
+													{
+														SendInsertOptionsToWindow();
+													}, 200);
+												}
+											}	
+											else if (event.data.hasOwnProperty("type") && event.data.type == "FormulaEditorPopupFlowInsertResourceOptionSelected")
+											{
+												newWin.insertList.querySelector("#" + event.data.id).click();
+												
+												//do set timeout to give the UI time to load the options
+												setTimeout(function()
+												{
+													SendInsertOptionsToWindow();
+												}, 200);
+											}
+											*/
 										});
+										
+										/*
+										function SendInsertOptionsToWindow()
+										{
+											var ulOptions = newWin.insertList.querySelectorAll("ul[lightning-basecombobox_basecombobox]");
+											var oOptions = { OptionGroups: [] };
+											if (ulOptions.length > 0)
+											{
+												//collect the options based on their group
+												for (var g = 0; g < ulOptions.length; g++)
+												{
+													var optionGroup = {
+														Name: ulOptions[g].getAttribute("aria-label"),
+														Options: []
+													};
+													oOptions.OptionGroups.push(optionGroup);
+													CollectOptions(optionGroup, ulOptions[g]);
+												}
+											}
+											else
+											{
+												//collect all of the options since there are no groups
+												var optionGroup = {
+													Name: "",
+													Options: []
+												};
+												oOptions.OptionGroups.push(optionGroup);
+												CollectOptions(optionGroup, newWin.insertList);
+											}											
+											
+											function CollectOptions(optionGroup, parentElement)
+											{
+												var options = parentElement.querySelectorAll("lightning-base-combobox-item");
+												for (var i = 0; i < options.length; i++)
+												{
+													optionGroup.Options.push(
+													{
+														Id: options[i].getAttribute("id"),
+														Text: options[i].innerText																
+													});
+												}
+											}
+											  
+											console.log(oOptions);
+											newWin.postMessage({type: "FormulaEditorPopupFlowInsertResourceOptions", options: oOptions }, "*")
+											
+										}
+										*/
 										
 										newWin.addEventListener("beforeunload", function(e)
 										{

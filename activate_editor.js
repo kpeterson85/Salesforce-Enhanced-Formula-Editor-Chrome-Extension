@@ -103,10 +103,11 @@ function ActivateWhenTextFieldsVisible(eTextfield)
 			}
 			
 			//CONNECT TO SALESFORCE
+			//CHECK FOR AVAILABLE VERSION BY CALLING https://[custom subdomain].my.salesforce.com/services/data/ WITH AUTHORIZATION BEARER TOKEN
 			window.jsforceConnection = new jsforce.Connection({
 				serverUrl : "https://" + document.location.host,
 				sessionId : sAccessToken,
-				version: "50.0"
+				version: "55.0"
 			});
 
 			ActivateEditor(oFormulaEditorSettings);
@@ -253,7 +254,7 @@ function FormulaEditAreaLoaded(sTextAreaId)
 		}
 	}
 	
-	var $fieldDetails = editorJQuery("<br><div class='formulaEditorValidation' style='display: none; padding: 4px 8px; margin: 2px 0;'></div><div class='formulaEditorFields' style='display: none;'><div class='formulaEditorError' style='display: none; clear: both; background: #f8d7da; padding: 5px; border: 1px solid #ff808d; border-radius: 5px;'></div><div class='formulaEditorWarning' style='display: none; clear: both; color: #856404; background-color: #fff3cd; padding: 5px; border: 1px solid #ffe699; border-radius: 5px;'></div><table class='formulaEditorFieldsTable list'></table><div class='fieldValuesPreviewShell' style='display: inline; text-align: right; float: right;'><input type='text' class='fieldValuesPreviewId' placeholder='Enter Record Id' /> <input type='button' class='fieldValuesPreviewButton btn' value='Load Record Values' /></div></div>");
+	var $fieldDetails = editorJQuery("<br><div class='formulaEditorValidation' style='display: none; padding: 4px 26px 4px 8px; margin: 2px 0; background-position: right 3px top 2px; background-repeat: no-repeat; border: 1px solid #AAA;'>Checking Syntax</div><div class='formulaEditorFields' style='display: none;'><div class='formulaEditorError' style='display: none; clear: both; background: #f8d7da; padding: 5px; border: 1px solid #ff808d; border-radius: 5px;'></div><div class='formulaEditorWarning' style='display: none; clear: both; color: #856404; background-color: #fff3cd; padding: 5px; border: 1px solid #ffe699; border-radius: 5px;'></div><table class='formulaEditorFieldsTable list'></table><div class='fieldValuesPreviewShell' style='display: inline; text-align: right; float: right;'><input type='text' class='fieldValuesPreviewId' placeholder='Enter Record Id' /> <input type='button' class='fieldValuesPreviewButton btn' value='Load Record Values' /></div></div>");
 	editorJQuery(oFormulaEditorSettings.LoadFieldDetailsAfterSelector).after($fieldDetails);
 	
 	//SETUP FIELD DETAILS IF WE CAN IDENTIFY WHAT OBJECT WE ARE WORKING WITH
@@ -373,6 +374,41 @@ function FormulaEditAreaLoaded(sTextAreaId)
 		window.postMessage({type: "FormulaEditorPopupSave", value: editAreaLoader.getValue(sTextAreaId) }, "*")
 	  });
 	  editorJQuery("#" + sTextAreaId).next("iframe").contents().find("#toolbar_1").append($saveButton);
+	  
+	  /*
+	  var $insertButton = editorJQuery("<input type='button' value='Insert Resource' class='btnInsertResource' style='float: left; margin: 1px 0 0 2px; padding: 0 2px;' />");
+	  $insertButton.click(function()
+	  {
+		//send a postmessage to the current window (the popup window) so that the contentscript postmessage handler can receive the updated formula and set it on the field
+		window.postMessage({type: "FormulaEditorPopupFlowInsertResource"}, "*")
+	  });
+	  editorJQuery("#" + sTextAreaId).next("iframe").contents().find("#toolbar_1").append($insertButton);
+	  
+	  var $insertOptionsDiv = editorJQuery("<div class='divInsertResourceOptions' style='position: absolute; background: #FFF; border: 1px solid #000; z-index: 999; text-align: left; max-height: 70%; overflow: auto;'></div>");
+	  editorJQuery("#" + sTextAreaId).next("iframe").contents().find("#toolbar_1").append($insertOptionsDiv);
+	  window.addEventListener("message", function(event)
+	  {
+		if (event.data.hasOwnProperty("type") && event.data.type == "FormulaEditorPopupFlowInsertResourceOptions")
+		{
+			$insertOptionsDiv.empty();
+			for (var g = 0; g < event.data.options.OptionGroups.length; g++)
+			{
+				$insertOptionsDiv.append("<div>" + event.data.options.OptionGroups[g].Name + "</div>");
+				var $ul = editorJQuery("<ul></ul>");
+				for (var i = 0; i < event.data.options.OptionGroups[g].Options.length; i++)
+				{
+					var $li = editorJQuery("<li id='" + event.data.options.OptionGroups[g].Options[i].Id + "'>" + event.data.options.OptionGroups[g].Options[i].Text + "</li>");
+					$li.click(function()
+					{
+						window.postMessage({type: "FormulaEditorPopupFlowInsertResourceOptionSelected", id: this.getAttribute("id")}, "*")
+					});
+					$ul.append($li);
+				}
+				$insertOptionsDiv.append($ul);
+			}
+		}
+	  });
+	  */
   }  
   
   //DON'T PROVIDE THE FORMAT BUTTON FOR POPUP EDITORS (PROCESS BUILDER, FLOWS) UNTIL WE HAVE TESTED IT MORE
@@ -520,9 +556,11 @@ function FormulaEditAreaChanged(sTextAreaId)
 		clearTimeout(window.FormulaEditorChangeTimeout);
 	}	
 	
+	var sBaseURL = editorJQuery("#ForceFormulaEditorBaseURL").val();
+	
 	window.FormulaEditorChangeTimeout = setTimeout(function()
 	{
-		//editorJQuery(".formulaEditorValidation").css("background", "#ececec").css("border", "1px solid #d8d8d8").html("Validating");
+		editorJQuery(".formulaEditorValidation").css("background-image", "url('" + sBaseURL + "images/processing.gif')").css("display", "inline-block");;
 		
 		editorJQuery("#"+sTextAreaId).val(editAreaLoader.getValue(sTextAreaId)); //set the native form textarea value so when we post the form it is validating the updated formula
 		
@@ -557,11 +595,11 @@ function FormulaEditAreaChanged(sTextAreaId)
 			{
 				if ($eValidation.find(".errorStyle").length > 0) //IS ERROR
 				{
-					editorJQuery(".formulaEditorValidation").css("background", "#f8d7da").css("border", "1px solid #ff808d");
+					editorJQuery(".formulaEditorValidation").css("background-color", "#f8d7da").css("border", "1px solid #ff808d");
 				}
 				else
 				{
-					editorJQuery(".formulaEditorValidation").css("background", "#d4edda").css("border", "1px solid #c3e6cb");
+					editorJQuery(".formulaEditorValidation").css("background-color", "#d4edda").css("border", "1px solid #80c08f");
 				}
 			}
 			else
@@ -570,13 +608,15 @@ function FormulaEditAreaChanged(sTextAreaId)
 				var $eValidation = editorJQuery(data).find(".errorMsg");
 				if ($eValidation.length > 0)
 				{
-					editorJQuery(".formulaEditorValidation").css("background", "#f8d7da").css("border", "1px solid #ff808d");
+					editorJQuery(".formulaEditorValidation").css("background-color", "#f8d7da").css("border", "1px solid #ff808d");
 				}				
 			}
 			
+			editorJQuery(".formulaEditorValidation").css("background-image", "none");
+			
 			if ($eValidation.length > 0)
 			{
-				editorJQuery(".formulaEditorValidation").html($eValidation.text()).css("display", "inline-block");
+				editorJQuery(".formulaEditorValidation").html($eValidation.text());
 			}
 			else
 			{
@@ -1150,7 +1190,7 @@ function GetFieldsFromFormula(sFormula)
 	sFormula = sFormula.replace(/(\btrue\b|\bfalse\b|\bnull\b|\b[0-9]+(\.[0-9]+)?\b)/ig, " ");
 	
 	//FUNCTIONS
-	sFormula = sFormula.replace(/(\bABS\b|\bADDMONTHS\b|\bBEGINS\b|\bBLANKVALUE\b|\bBR\b|\bCASESAFEID\b|\bCEILING\b|\bCONTAINS\b|\bCURRENCYRATE\b|\bDATE\b|\bDATETIMEVALUE\b|\bDATEVALUE\b|\bDAY\b|\bDISTANCE\b|\bEXP\b|\bFIND\b|\bFLOOR\b|\bGEOLOCATION\b|\bGETSESSIONID\b|\bHOUR\b|\bHYPERLINK\b|\bIMAGE\b|\bINCLUDES\b|\bISBLANK\b|\bISCHANGED\b|\bISCLONE\b|\bISNEW\b|\bISNULL\b|\bISNUMBER\b|\bISPICKVAL\b|\bLEFT\b|\bLEN\b|\bLN\b|\bLOG\b|\bLOWER\b|\bLPAD\b|\bMAX\b|\bMCEILING\b|\bMFLOOR\b|\bMID\b|\bMILLISECOND\b|\bMIN\b|\bMINUTE\b|\bMOD\b|\bMONTH\b|\bNOT\b|\bNOW\b|\bNULLVALUE\b|\bPRIORVALUE\b|\bREGEX\b|\bRIGHT\b|\bROUND\b|\bRPAD\b|\bSQRT\b|\bSECOND\b|\bSUBSTITUTE\b|\bTEXT\b|\bTIMENOW\b|\bTIMEVALUE\b|\bTODAY\b|\bTRIM\b|\bUPPER\b|\bVALUE\b|\bVLOOKUP\b|\bWEEKDAY\b|\bYEAR\b)/ig, " ");
+	sFormula = sFormula.replace(/(\bABS\b|\bACOS\b|\bADDMONTHS\b|\bASCII\b|\bASIN\b|\bATAN\b|\bATAN2\b|\bBEGINS\b|\bBLANKVALUE\b|\bBR\b|\bCASESAFEID\b|\bCEILING\b|\bCHR\b|\bCONTAINS\b|\bCOS\b|\bCURRENCYRATE\b|\bDATE\b|\bDATETIMEVALUE\b|\bDATEVALUE\b|\bDAY\b|\bDAYOFYEAR\b|\bDISTANCE\b|\bEXP\b|\bFIND\b|\bFLOOR\b|\bFORMATDURATON\b|\bFROMUNIXTIME\b|\bGEOLOCATION\b|\bGETSESSIONID\b|\bHOUR\b|\bHYPERLINK\b|\bIMAGE\b|\bINCLUDES\b|\bINITCAP\b|\bISBLANK\b|\bISCHANGED\b|\bISCLONE\b|\bISNEW\b|\bISNULL\b|\bISNUMBER\b|\bISOWEEK\b|\bISOYEAR\b|\bISPICKVAL\b|\bLEFT\b|\bLEN\b|\bLN\b|\bLOG\b|\bLOWER\b|\bLPAD\b|\bMAX\b|\bMCEILING\b|\bMFLOOR\b|\bMID\b|\bMILLISECOND\b|\bMIN\b|\bMINUTE\b|\bMOD\b|\bMONTH\b|\bNOT\b|\bNOW\b|\bNULLVALUE\b|\bPI\b|\bPICKLISTCOUNT\b|\bPRIORVALUE\b|\bREGEX\b|\bRIGHT\b|\bROUND\b|\bRPAD\b|\bSECOND\b|\bSIN\b|\bSQRT\b|\bSUBSTITUTE\b|\bTAN\b|\bTEXT\b|\bTIMENOW\b|\bTIMEVALUE\b|\bTODAY\b|\bTRIM\b|\bTRUNC\b|\bUNIXTIMESTAMP\b|\bUPPER\b|\bVALUE\b|\bVLOOKUP\b|\bWEEKDAY\b|\bYEAR\b)/ig, " ");
 	
 	//BOOLEAN
 	sFormula = sFormula.replace(/(\bAND\b|\bCASE\b|\bIF\b|\bOR\b|\&|\|)/ig, " ");
