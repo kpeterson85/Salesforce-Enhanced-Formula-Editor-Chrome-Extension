@@ -1,6 +1,6 @@
 {
-	"manifest_version": 2,
-	"browser_action": {
+	"manifest_version": 3,
+	"action": {
 		"default_icon": {
 			"16": "icon16.png",
 			"24": "icon24.png",
@@ -20,35 +20,42 @@
 		}
 	],
 	"web_accessible_resources": [
-		"options.html",
-		"edit_area_loader.js",
-		"activate_editor.js",
-		"elements_functions.js",
-		"resize_area.js",
-		"reg_syntax.js",
-		"langs/en.js",
-		"reg_syntax/forceformula.js",
-		"edit_area.css",
-		"edit_area.js",
-		"manage_area.js",
-		"edit_area_functions.js",
-		"keyboard.js",
-		"search_replace.js",
-		"highlight.js",
-		"regexp.js",
-		"images/*",
-		"jsforce-core.min.js",
-		"jquery.min.js",
-		"FieldDetailsScreenshot.jpg",
-		"plugins/*"
+		{
+		  "resources": [
+			"options.html",
+			"edit_area_loader.js",
+			"activate_editor.js",
+			"elements_functions.js",
+			"resize_area.js",
+			"reg_syntax.js",
+			"langs/en.js",
+			"reg_syntax/forceformula.js",
+			"edit_area.css",
+			"edit_area.js",
+			"manage_area.js",
+			"edit_area_functions.js",
+			"keyboard.js",
+			"search_replace.js",
+			"highlight.js",
+			"regexp.js",
+			"images/*",
+			"jsforce-core.min.js",
+			"jquery.min.js",
+			"FieldDetailsScreenshot.jpg",
+			"plugins/*",
+			"review.js"
+		  ],
+		  "matches": [
+			"<all_urls>"
+		  ]
+		}		
 	],
 	"description": "Enhances Salesforce formulas with syntax highlighting, autocomplete, formatting, field analysis, and syntax checking.",
 	"name": "Salesforce.com Enhanced Formula Editor",
-	"version": "2.5.2",
+	"version": "2.6",
 	"options_page": "options.html",
 	"background": {
-		"scripts": ["background.js"],
-		"persistent": false
+		"service_worker": "background.js"
 	},
 	"permissions": ["storage"]
 }
