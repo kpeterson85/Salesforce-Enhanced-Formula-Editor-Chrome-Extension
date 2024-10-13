@@ -411,19 +411,14 @@ function FormulaEditAreaLoaded(sTextAreaId)
 	  */
   }  
   
-  //DON'T PROVIDE THE FORMAT BUTTON FOR POPUP EDITORS (PROCESS BUILDER, FLOWS) UNTIL WE HAVE TESTED IT MORE
-  if (oFormulaEditorSettings.Popup == false)
+  //SETUP THE FORMAT BUTTON
+  //FIND THE EDITOR AND INJECT THE FORMAT BUTTON, THE EDITOR IFRAME IS ALWAYS RIGHT AFTER THE TEXT AREA
+  var $formatButton = editorJQuery("<input type='button' value='Format' class='btnFormatFormula' style='float: left; margin: 1px 0 0 2px; padding: 0 2px;' />");
+  $formatButton.click(function()
   {
-	  //SETUP THE FORMAT BUTTON
-	  //FIND THE EDITOR AND INJECT THE FORMAT BUTTON, THE EDITOR IFRAME IS ALWAYS RIGHT AFTER THE TEXT AREA
-	  var $formatButton = editorJQuery("<input type='button' value='Format' class='btnFormatFormula' style='float: left; margin: 1px 0 0 2px; padding: 0 2px;' />");
-	  $formatButton.click(function()
-	  {
-		formatFormula(sTextAreaId);
-	  });
-	  editorJQuery("#" + sTextAreaId).next("iframe").contents().find("#toolbar_1").append($formatButton);
-  }
-  
+	formatFormula(sTextAreaId);
+  });
+  editorJQuery("#" + sTextAreaId).next("iframe").contents().find("#toolbar_1").append($formatButton);
 
   //ONLY PROVIDE THE REVIEW CHANGES BUTTON IF IT IS THE MAIN EDITOR ON THE PAGE (NOT SUB FORMULA EDITORS) SINCE
   //USERS WON'T BE EDITING AND SAVING SUB FORMULAS
@@ -1689,10 +1684,15 @@ function tokenizer(sFormula)
   {
     return 	(iCharCode >= 65 && iCharCode <= 90) || //UPPERCASE LETTERS
         (iCharCode >= 97 && iCharCode <= 122) || //LOWERCASE LETTERS
+		iCharCode == 33 || //EXCLAMATION POINT, USED IN FLOWS AND PROCESS BUILDERS LIKE {!$Record.Subject}
         iCharCode == 36 || //DOLLAR SIGN, IN THE CASE OF SYSTEM VALUES LIKE $User.IsActive
         iCharCode == 46 || //DECIMAL
+		iCharCode == 91 || //LEFT BRACKET, FOR PROCESS BUILDERS [Lead].RecordTypeId
+		iCharCode == 93 || //RIGHT BRACKET, FOR PROCESS BUILDERS [Lead].RecordTypeId
         iCharCode == 95 || //UNDERSCORES
 		iCharCode == 58 || //COLON, IN THE CASE OF A POLYMORPHIC OWNER FIELD LIKE Owner:User.UserRoleId
+		iCharCode == 123 || //LEFT CURLY BRACE, USED IN FLOWS AND PROCESS BUILDERS LIKE {!$Record.Subject}
+		iCharCode == 125 || //RIGHT CURLY BRACE, USED IN FLOWS AND PROCESS BUILDERS LIKE {!$Record.Subject}
         (iCharCode >= 48 && iCharCode <= 57) //NUMBERS CAN BE IN NAMES, NAME MUST START WITH LETTER AND THEN CAN CONTAIN NUMBERS
   }
 
