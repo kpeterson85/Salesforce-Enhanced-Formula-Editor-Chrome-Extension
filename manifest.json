@@ -15,7 +15,7 @@
 	"content_scripts": [
 		{
 			"js": [ "contentscript.js" ],
-			"matches": [ "https://*.salesforce.com/*", "https://*.lightning.force.com/*", "https://*.cloudforce.com/*" ],
+			"matches": [ "https://*.salesforce.com/*", "https://*.salesforce-setup.com/*", "https://*.lightning.force.com/*", "https://*.cloudforce.com/*" ],
 			"all_frames": true
 		}
 	],
@@ -52,7 +52,7 @@
 	],
 	"description": "Enhances Salesforce formulas with syntax highlighting, autocomplete, formatting, field analysis, and syntax checking.",
 	"name": "Salesforce.com Enhanced Formula Editor",
-	"version": "2.6",
+	"version": "2.6.1",
 	"options_page": "options.html",
 	"background": {
 		"service_worker": "background.js"
